@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                 String                @id @default(uuid())
+  firebaseUid        String?               @unique
+  email              String                @unique
+  name               String?
+  phone              String?
+  role               String                @default("LANDLORD")
+  subscriptionPlan   String                @default("FREE")
+  subscriptionExpiry DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  imageUrl           String?
+  landlordId         String?
+  assignments        CaretakerAssignment[]
+  complaints         Complaint[]
+  notices            Notice[]              @relation("LandlordNotices")
+  properties         Property[]
+  tenantProfile      Tenant?               @relation("TenantUser")
+  tenants            Tenant[]
+  landlord           User?                 @relation("LandlordCaretakers", fields: [landlordId], references: [id])
+  caretakers         User[]                @relation("LandlordCaretakers")
+}
+
+model CaretakerAssignment {
+  id          String   @id @default(uuid())
+  caretakerId String
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+  caretaker   User     @relation(fields: [caretakerId], references: [id])
+
+  @@unique([caretakerId, propertyId])
+}
+
+model Property {
+  id          String                @id @default(uuid())
+  landlordId  String
+  name        String
+  address     String
+  units       Int                   @default(1)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  imageUrl    String?
+  assignments CaretakerAssignment[]
+  complaints  Complaint[]
+  landlord    User                  @relation(fields: [landlordId], references: [id])
+  rentRecords RentRecord[]
+  tenants     Tenant[]
+}
+
+model Tenant {
+  id          String           @id @default(uuid())
+  landlordId  String
+  userId      String?          @unique
+  propertyId  String
+  name        String
+  phone       String
+  email       String?
+  rentAmount  Float
+  deposit     Float?
+  leaseStart  DateTime
+  leaseEnd    DateTime?
+  hometown    String?
+  roomNumber  String?
+  idProofUrl  String?
+  rentDay     Int              @default(1)
+  rentStatus  String           @default("PENDING")
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  complaints  Complaint[]
+  reminders   Reminder[]
+  rentRecords RentRecord[]
+  property    Property         @relation(fields: [propertyId], references: [id])
+  user        User?            @relation("TenantUser", fields: [userId], references: [id])
+  landlord    User             @relation(fields: [landlordId], references: [id])
+  documents   TenantDocument[]
+}
+
+model TenantDocument {
+  id                   String   @id @default(uuid())
+  tenantId             String
+  type                 String
+  url                  String
+  isVisibleToCaretaker Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  tenant               Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model RentRecord {
+  id         String    @id @default(uuid())
+  tenantId   String
+  propertyId String
+  amount     Float
+  status     String    @default("PENDING")
+  month      DateTime
+  paidDate   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  property   Property  @relation(fields: [propertyId], references: [id])
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+model Complaint {
+  id          String   @id @default(uuid())
+  landlordId  String
+  propertyId  String
+  tenantId    String
+  status      String   @default("OPEN")
+  title       String
+  description String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  imageUrl    String?
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  property    Property @relation(fields: [propertyId], references: [id])
+  landlord    User     @relation(fields: [landlordId], references: [id])
+}
+
+model Reminder {
+  id        String    @id @default(uuid())
+  tenantId  String
+  type      String
+  status    String    @default("PENDING")
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+model Notice {
+  id         String   @id @default(uuid())
+  landlordId String
+  title      String
+  body       String
+  priority   String   @default("NORMAL")
+  createdAt  DateTime @default(now())
+  landlord   User     @relation("LandlordNotices", fields: [landlordId], references: [id])
+}

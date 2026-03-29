@@ -7,27 +7,43 @@ import { useLocation } from 'wouter';
 import { storage } from '@/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
+interface User {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  imageUrl?: string;
+  assignments?: { propertyId: string }[];
+}
+
+interface Property {
+  id: string;
+  name: string;
+}
+
 export function Caretakers() {
   const { user } = useAuthStore();
   const [, ] = useLocation();
 
-  if (user?.role !== 'LANDLORD') {
-    return <div className="p-20 text-center font-bold text-slate-400">Access Restricted</div>;
-  }
-
-  const [caretakers, setCaretakers] = useState<any[]>([]);
+  const [caretakers, setCaretakers] = useState<User[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
   const [form, setForm] = useState({ name: '', phone: '', email: '', imageUrl: '' });
-  const [properties, setProperties] = useState<any[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProps, setSelectedProps] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchCaretakers();
-    fetchProperties();
-  }, []);
+    if (user?.role === 'LANDLORD') {
+      fetchCaretakers();
+      fetchProperties();
+    }
+  }, [user?.role]);
+
+  if (user?.role !== 'LANDLORD') {
+    return <div className="p-20 text-center font-bold text-slate-400">Access Restricted</div>;
+  }
 
   const fetchProperties = async () => {
     try {
@@ -167,9 +183,11 @@ export function Caretakers() {
                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Authorized Sites</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                          {ct.assignments?.length > 0 ? (
+                          {ct.assignments && ct.assignments.length > 0 ? (
                             ct.assignments.map((a: any) => (
-                              <span key={a.id} className="bg-slate-900 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">{a.property?.name}</span>
+                              <span key={a.propertyId} className="bg-slate-900 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                                {properties.find(p => p.id === a.propertyId)?.name || 'Property'}
+                              </span>
                             ))
                           ) : (
                             <span className="text-[12px] font-bold text-slate-300 italic">No assigned sites</span>

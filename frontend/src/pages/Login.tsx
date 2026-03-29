@@ -7,6 +7,13 @@ import { auth, googleProvider } from '@/firebase';
 import { signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { api } from '@/api/client';
 
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+    confirmationResult: any;
+  }
+}
+
 export function Login() {
   const [, setLocation] = useLocation();
   const setUser = useAuthStore(state => state.setUser);
@@ -18,10 +25,10 @@ export function Login() {
 
   const setupRecaptcha = () => {
     // Clear any existing verifier to avoid "element removed" or "already rendered" errors
-    if ((window as any).recaptchaVerifier) {
+    if (window.recaptchaVerifier) {
       try {
-        (window as any).recaptchaVerifier.clear();
-      } catch (e) {}
+        window.recaptchaVerifier.clear();
+      } catch (_e) {}
     }
     
     const container = document.getElementById('recaptcha-container');
@@ -29,7 +36,7 @@ export function Login() {
       container.innerHTML = '';
     }
     
-    (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       'size': 'invisible'
     });
   };
@@ -40,8 +47,8 @@ export function Login() {
     setLoading(true);
     try {
       setupRecaptcha();
-      const confirmationResult = await signInWithPhoneNumber(auth, phone, (window as any).recaptchaVerifier);
-      (window as any).confirmationResult = confirmationResult;
+      const confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+      window.confirmationResult = confirmationResult;
       setStep('OTP');
     } catch (error: any) {
       console.error("Firebase Auth Error:", error);

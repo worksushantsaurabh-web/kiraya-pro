@@ -25,14 +25,14 @@ export function TenantDashboard() {
           setTenantInfo(tenantsRes.data[0]);
         }
         setComplaints(compRes.data);
-      } catch (err) {
-        console.error("Dashboard fetch error", err);
+      } catch (_err) {
+        console.error("Dashboard fetch error", _err);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [refreshUser]);
 
   if (loading) return <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-black" /></div>;
 

@@ -24,9 +24,9 @@ export function Complaints() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
-  const fetchData = async () => {
+  async function fetchData() {
     try {
       const [compRes, tenantsRes] = await Promise.all([
         api.get('/complaints'),
@@ -42,7 +42,7 @@ export function Complaints() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,9 +59,10 @@ export function Complaints() {
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       setForm(f => ({ ...f, imageUrl: url }));
-    } catch (error: any) {
-      console.error("Storage Error:", error);
-      alert(`Upload failed: ${error.message} (Code: ${error.code})`);
+    } catch (error) {
+      const storageError = error as any;
+      console.error("Storage Error:", storageError);
+      alert(`Upload failed: ${storageError.message} (Code: ${storageError.code})`);
     } finally {
       setUploading(false);
     }
@@ -85,7 +86,7 @@ export function Complaints() {
       fetchData();
       setShowAdd(false);
       setForm({ title: '', description: '', tenantId: tenants[0]?.id || '', imageUrl: '' });
-    } catch(err) {
+    } catch(_err) {
       alert("Failed to create complaint");
     }
   };
@@ -95,7 +96,7 @@ export function Complaints() {
       await api.put(`/complaints/${id}`, { status: 'RESOLVED' });
       fetchData();
       setSelectedId(null);
-    } catch (err) {
+    } catch (_err) {
       alert("Failed to update status");
     }
   };

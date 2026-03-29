@@ -1,21 +1,38 @@
 import { useEffect, useState } from 'react';
 import { Building2, Users, AlertCircle, TrendingUp, ChevronRight, Activity, Loader2, Bell, X, CheckCircle2, Crown } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/api/client';
 import { useLocation } from 'wouter';
+
+interface DashboardStats {
+  properties: number;
+  tenants: number;
+  complaints: number;
+  overdue: number;
+  caretakers: any[];
+}
+
+interface StatItem {
+  title: string;
+  icon: LucideIcon;
+  color: string;
+  count: number;
+  path: string;
+}
 
 export function Dashboard() {
   const { user, refreshUser } = useAuthStore();
   const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [data, setData] = useState({
+  const [data, setData] = useState<DashboardStats>({
     properties: 0,
     tenants: 0,
     complaints: 0,
     overdue: 0,
-    caretakers: [] as any[]
+    caretakers: []
   });
 
   useEffect(() => {
@@ -43,9 +60,9 @@ export function Dashboard() {
       }
     };
     fetchData();
-  }, []);
+  }, [refreshUser]);
 
-  const stats = [
+  const stats: StatItem[] = [
     { title: 'Properties', icon: Building2, color: 'text-indigo-600', count: data.properties, path: '/properties' },
     { title: 'Tenants', icon: Users, color: 'text-emerald-600', count: data.tenants, path: '/tenants' },
     { title: 'Issues', icon: AlertCircle, color: 'text-rose-600', count: data.complaints, path: '/complaints' },
@@ -204,7 +221,7 @@ export function Dashboard() {
                          try {
                            await api.delete(`/caretakers/${ct.id}`);
                            window.location.reload(); // Quick refresh for dashboard
-                         } catch (err) {
+                         } catch (_err) {
                            alert("Failed to revoke");
                          }
                        }

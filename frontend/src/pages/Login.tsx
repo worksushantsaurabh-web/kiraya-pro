@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ArrowRight, CheckCircle, Smartphone, Building2, Shield, Users, Sparkles, Loader2 } from 'lucide-react';
@@ -23,19 +23,28 @@ export function Login() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const setupRecaptcha = () => {
-    if (window.recaptchaVerifier) {
-      try {
+  // Clean up reCAPTCHA on component unmount to prevent memory leaks/ID collisions
+  useEffect(() => {
+    return () => {
+      if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
-      } catch (e) {
-        console.error("Error clearing recaptcha", e);
+        window.recaptchaVerifier = null;
       }
-    }
-    
+    };
+  }, []);
+
+  const setupRecaptcha = () => {
+    // Check if instance already exists and the container is still in the DOM
+    if (window.recaptchaVerifier) return;
+
     window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible',
       callback: () => {
         console.log('Recaptcha resolved');
+      },
+      'expired-callback': () => {
+        window.recaptchaVerifier?.clear();
+        window.recaptchaVerifier = null;
       }
     });
   };
@@ -51,8 +60,13 @@ export function Login() {
       window.confirmationResult = confirmationResult;
       setStep('OTP');
     } catch (error: any) {
-      console.error(error);
-      alert(error.message || 'Login failed');
+      console.error("Phone Login Error:", error);
+      alert(error.message || 'Login failed. Please try again.');
+      // Reset recaptcha on error so user can try again
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
+      }
     } finally {
       setLoading(false);
     }
@@ -65,6 +79,10 @@ export function Login() {
       const result = await window.confirmationResult.confirm(otp);
       const { user: fbUser } = result;
       
+      // Get token BEFORE calling your API so the request is authorized
+      const token = await fbUser.getIdToken();
+      localStorage.setItem('token', token);
+
       const { data } = await api.post('/users', {
         firebaseUid: fbUser.uid,
         email: fbUser.email,
@@ -73,12 +91,11 @@ export function Login() {
         role: role
       });
       
-      const token = await fbUser.getIdToken();
-      localStorage.setItem('token', token);
       setUser(data);
+      setLocation('/dashboard'); // Direct user to the app
     } catch (error: any) {
-      console.error(error);
-      alert('Invalid OTP');
+      console.error("OTP Error:", error);
+      alert('Invalid OTP. Please check and try again.');
     } finally {
       setLoading(false);
     }
@@ -90,6 +107,9 @@ export function Login() {
       const result = await signInWithPopup(auth, googleProvider);
       const { user: fbUser } = result;
       
+      const token = await fbUser.getIdToken();
+      localStorage.setItem('token', token);
+
       const { data } = await api.post('/users', {
         firebaseUid: fbUser.uid,
         email: fbUser.email,
@@ -98,9 +118,8 @@ export function Login() {
         role: role
       });
       
-      const token = await fbUser.getIdToken();
-      localStorage.setItem('token', token);
       setUser(data);
+      setLocation('/dashboard');
     } catch (error: any) {
       console.error("Google Login Error:", error);
       alert(`Google Login failed: ${error.message || 'Unknown error'}`);
@@ -114,8 +133,9 @@ export function Login() {
       <div className="w-full max-w-[440px] relative z-10">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-center mb-10">
           <div className="flex flex-col items-center">
+            {/* Added / for absolute path to public folder */}
             <div className="w-20 h-20 bg-white rounded-[28px] flex items-center justify-center shadow-xl border border-slate-100 overflow-hidden mb-6 p-2">
-               <img src="./logo.png" alt="Kiraya Pro" className="w-full h-full object-contain" />
+               <img src="/logo.png" alt="Kiraya Pro" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="text-black text-3xl font-black tracking-tight leading-none uppercase">Kiraya Pro</h1>
@@ -126,14 +146,14 @@ export function Login() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="u-card !p-8 !rounded-[42px] bg-white">
           <div className="flex bg-slate-50 p-1 rounded-[22px] mb-8 overflow-hidden">
-            {['LANDLORD', 'CARETAKER', 'TENANT'].map(r => {
+            {(['LANDLORD', 'CARETAKER', 'TENANT'] as const).map(r => {
               const Icon = r === 'LANDLORD' ? Building2 : r === 'CARETAKER' ? Shield : Users;
               const label = r === 'LANDLORD' ? 'Owner' : r === 'CARETAKER' ? 'Staff' : 'Tenant';
               
               return (
                 <button 
                   key={r} 
-                  onClick={() => setRole(r as any)} 
+                  onClick={() => setRole(r)} 
                   className={`flex-1 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-tight transition-all duration-300 ${role === r ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-black/60'}`}
                 >
                   <div className="flex flex-col items-center justify-center space-y-1">
@@ -151,12 +171,27 @@ export function Login() {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Work Mobile</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-5 flex items-center text-slate-300 transition-colors duration-300"><Smartphone size={18}/></div>
-                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="98765 43210" className="u-input !pl-14" />
+                  <input 
+                    type="tel" 
+                    value={phone} 
+                    onChange={e => setPhone(e.target.value.replace(/\D/g, ''))} 
+                    placeholder="98765 43210" 
+                    className="u-input !pl-14" 
+                  />
                 </div>
               </div>
 
-              <button onClick={handlePhoneLogin} disabled={loading || !phone} className="u-btn-primary w-full !py-5 text-lg group">
-                {loading ? <Loader2 className="animate-spin" size={20} /> : <><span>Enter Portal</span><ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"/></>}
+              <button 
+                onClick={handlePhoneLogin} 
+                disabled={loading || phone.length < 10} 
+                className="u-btn-primary w-full !py-5 text-lg group disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="animate-spin" size={20} /> : (
+                  <div className="flex items-center justify-center gap-2">
+                    <span>Enter Portal</span>
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"/>
+                  </div>
+                )}
               </button>
 
               <div id="recaptcha-container" />
@@ -168,7 +203,7 @@ export function Login() {
 
               <button onClick={handleGoogleLogin} disabled={loading} className="u-btn-secondary w-full !py-4.5 !border-slate-100 hover:!border-slate-200">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 mr-3" alt="Google" />
-                <span className="text-sm">Sign in with Google</span>
+                <span className="text-sm font-bold">Sign in with Google</span>
               </button>
             </div>
           ) : (
@@ -180,14 +215,30 @@ export function Login() {
               </motion.div>
               
               <div className="space-y-2">
-                <input type="text" maxLength={6} value={otp} onChange={e => setOtp(e.target.value)} placeholder="000 000" className="u-input text-center text-3xl font-black tracking-[0.5em] placeholder:text-slate-100 !py-7" />
+                <input 
+                  type="text" 
+                  maxLength={6} 
+                  value={otp} 
+                  onChange={e => setOtp(e.target.value.replace(/\D/g, ''))} 
+                  placeholder="000 000" 
+                  className="u-input text-center text-3xl font-black tracking-[0.5em] placeholder:text-slate-100 !py-7" 
+                />
               </div>
 
-              <button onClick={verifyOtp} disabled={loading || otp.length < 6} className="u-btn-primary w-full !py-5 text-lg">
+              <button 
+                onClick={verifyOtp} 
+                disabled={loading || otp.length < 6} 
+                className="u-btn-primary w-full !py-5 text-lg disabled:opacity-50"
+              >
                 {loading ? <Loader2 className="animate-spin" size={20} /> : <span>Verify OTP</span>}
               </button>
               
-              <button onClick={() => setStep('LOGIN')} className="w-full text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-black transition-colors">Change Number</button>
+              <button 
+                onClick={() => setStep('LOGIN')} 
+                className="w-full text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-black transition-colors"
+              >
+                Change Number
+              </button>
             </div>
           )}
         </motion.div>

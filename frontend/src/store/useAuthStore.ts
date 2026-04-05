@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+// Import the API client at the top instead of dynamically
+import { api } from '@/api/client'; 
 
 export interface User {
   id: string;
@@ -27,11 +29,13 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
       refreshUser: async () => {
         try {
-          const { api } = await import('@/api/client');
+          // No need to 'await import' anymore
           const res = await api.get('/users/me');
           if (res.data) set({ user: res.data });
         } catch (err) {
           console.error("Auth refresh failed", err);
+          // Optional: clear user if the token is expired/invalid
+          // set({ user: null }); 
         }
       }
     }),

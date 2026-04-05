@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ArrowRight, CheckCircle, Smartphone, Building2, Shield, Users, Sparkles, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { auth, googleProvider } from '@/firebase';
 import { signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { api } from '@/api/client';

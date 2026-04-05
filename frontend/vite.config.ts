@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url' // Required for stable path resolution
 // https://vitejs.dev/config/
 export default defineConfig({
   // This ensures assets load correctly on github.io/kiraya-pro/
-  base: '/kiraya-pro/',
+  base: process.env.NODE_ENV === 'production' ? '/kiraya-pro/' : '/',
 
   plugins: [
     react(),

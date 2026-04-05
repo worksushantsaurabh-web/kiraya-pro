@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { useAuthStore } from '@/store/useAuthStore';
-import { ArrowRight, CheckCircle, Smartphone, Building2, Shield, Users, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle, Smartphone, Building2, Shield, Users, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth, googleProvider } from '@/firebase';
 import { signInWithPopup, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
@@ -24,72 +24,69 @@ export function Login() {
   const [loading, setLoading] = useState(false);
 
   const setupRecaptcha = () => {
-    // Clear any existing verifier to avoid "element removed" or "already rendered" errors
     if (window.recaptchaVerifier) {
       try {
         window.recaptchaVerifier.clear();
-      } catch (_e) {}
-    }
-    
-    const container = document.getElementById('recaptcha-container');
-    if (container) {
-      container.innerHTML = '';
+      } catch (e) {
+        console.error("Error clearing recaptcha", e);
+      }
     }
     
     window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible'
+      size: 'invisible',
+      callback: () => {
+        console.log('Recaptcha resolved');
+      }
     });
   };
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phone) return;
+  const handlePhoneLogin = async () => {
+    if (!phone || phone.length < 10) return;
     setLoading(true);
     try {
       setupRecaptcha();
-      const confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+      const appVerifier = window.recaptchaVerifier;
+      const formattedPhone = phone.startsWith('+') ? phone : `+91${phone}`;
+      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
       window.confirmationResult = confirmationResult;
       setStep('OTP');
     } catch (error: any) {
-      console.error("Firebase Auth Error:", error);
-      alert(`Failed to send OTP: ${error.message || 'Unknown error'}. 
-      
-Hint: If you just migrated, make sure to:
-1. Enable "Phone" in Firebase Console > Authentication.
-2. Add "localhost" to "Authorized domains" in Firebase Settings.`);
+      console.error(error);
+      alert(error.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const verifyOtp = async () => {
+    if (!otp || otp.length < 6) return;
     setLoading(true);
     try {
-      const result = await (window as any).confirmationResult.confirm(otp);
+      const result = await window.confirmationResult.confirm(otp);
       const { user: fbUser } = result;
       
       const { data } = await api.post('/users', {
         firebaseUid: fbUser.uid,
         email: fbUser.email,
-        name: fbUser.displayName || 'User',
+        name: fbUser.displayName,
         phone: fbUser.phoneNumber,
         role: role
       });
       
+      const token = await fbUser.getIdToken();
+      localStorage.setItem('token', token);
       setUser(data);
-      setLocation('/');
     } catch (error: any) {
-      console.error("OTP Verification Logic Error", error);
-      alert(`Login failed: ${error.response?.data?.error || error.message || 'Verification error'}`);
+      console.error(error);
+      alert('Invalid OTP');
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
       const { user: fbUser } = result;
       
@@ -97,211 +94,138 @@ Hint: If you just migrated, make sure to:
         firebaseUid: fbUser.uid,
         email: fbUser.email,
         name: fbUser.displayName,
+        imageUrl: fbUser.photoURL,
         role: role
       });
       
+      const token = await fbUser.getIdToken();
+      localStorage.setItem('token', token);
       setUser(data);
-      setLocation('/');
     } catch (error: any) {
-      console.error("Error logging in with Google:", error);
+      console.error("Google Login Error:", error);
       alert(`Google Login failed: ${error.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const roles = [
-    { key: 'LANDLORD' as const, label: 'Owner', icon: Building2 },
-    { key: 'CARETAKER' as const, label: 'Caretaker', icon: Shield },
-    { key: 'TENANT' as const, label: 'Tenant', icon: Users },
-  ];
-
-  const features = [
-    'Track rent payments automatically',
-    'Manage unlimited properties',
-    'Send WhatsApp reminders',
-  ];
-
   return (
-    <div className="min-h-screen bg-black flex flex-col justify-end relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 z-0">
-        <img 
-          src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=2000" 
-          alt="Premium Architecture"
-          className="w-full h-full object-cover opacity-50 scale-110"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
-      </div>
-
-      {/* Brand Header */}
-      <div className="absolute top-0 left-0 right-0 z-20 px-8 pt-16 pb-8">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-16 h-16 bg-white rounded-[20px] flex items-center justify-center shadow-2xl shadow-white/10 overflow-hidden">
-               <img src="/logo.png" alt="Kiraya Pro" className="w-full h-full object-contain p-1" />
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 relative">
+      <div className="w-full max-w-[440px] relative z-10">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-center mb-10">
+          <div className="flex flex-col items-center">
+            <div className="w-20 h-20 bg-white rounded-[28px] flex items-center justify-center shadow-xl border border-slate-100 overflow-hidden mb-6 p-2">
+               <img src="./logo.png" alt="Kiraya Pro" className="w-full h-full object-contain" />
             </div>
             <div>
-              <h1 className="text-white text-3xl font-extrabold tracking-tighter leading-none">Kiraya Pro</h1>
-              <p className="text-white/40 text-[11px] font-extrabold uppercase tracking-[0.3em] mt-0.5">Property Management</p>
+              <h1 className="text-black text-3xl font-black tracking-tight leading-none uppercase">Kiraya Pro</h1>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] mt-3 opacity-60">Professional Management</p>
             </div>
           </div>
         </motion.div>
 
-        {/* Feature Pills */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="u-card !p-8 !rounded-[42px] bg-white">
+          <div className="flex bg-slate-50 p-1 rounded-[22px] mb-8 overflow-hidden">
+            {['LANDLORD', 'CARETAKER', 'TENANT'].map(r => {
+              const Icon = r === 'LANDLORD' ? Building2 : r === 'CARETAKER' ? Shield : Users;
+              const label = r === 'LANDLORD' ? 'Owner' : r === 'CARETAKER' ? 'Staff' : 'Tenant';
+              
+              return (
+                <button 
+                  key={r} 
+                  onClick={() => setRole(r as any)} 
+                  className={`flex-1 py-3.5 rounded-[18px] text-[10px] font-black uppercase tracking-tight transition-all duration-300 ${role === r ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-black/60'}`}
+                >
+                  <div className="flex flex-col items-center justify-center space-y-1">
+                    <Icon size={14}/>
+                    <span>{label}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {step === 'LOGIN' ? (
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Work Mobile</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-5 flex items-center text-slate-300 transition-colors duration-300"><Smartphone size={18}/></div>
+                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="98765 43210" className="u-input !pl-14" />
+                </div>
+              </div>
+
+              <button onClick={handlePhoneLogin} disabled={loading || !phone} className="u-btn-primary w-full !py-5 text-lg group">
+                {loading ? <Loader2 className="animate-spin" size={20} /> : <><span>Enter Portal</span><ArrowRight size={20} className="group-hover:translate-x-1 transition-transform"/></>}
+              </button>
+
+              <div id="recaptcha-container" />
+
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-50" /></div>
+                <div className="relative flex justify-center"><span className="bg-white px-4 text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">Secure Single Sign On</span></div>
+              </div>
+
+              <button onClick={handleGoogleLogin} disabled={loading} className="u-btn-secondary w-full !py-4.5 !border-slate-100 hover:!border-slate-200">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 mr-3" alt="Google" />
+                <span className="text-sm">Sign in with Google</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="text-center">
+                <div className="w-16 h-16 bg-slate-50 rounded-[28px] flex items-center justify-center mx-auto mb-6 text-black"><Shield size={28}/></div>
+                <h2 className="text-black text-2xl font-black tracking-tight">Verify Identity</h2>
+                <p className="text-slate-400 text-sm font-bold mt-2 uppercase tracking-tight">Enter 6-digit OTP</p>
+              </motion.div>
+              
+              <div className="space-y-2">
+                <input type="text" maxLength={6} value={otp} onChange={e => setOtp(e.target.value)} placeholder="000 000" className="u-input text-center text-3xl font-black tracking-[0.5em] placeholder:text-slate-100 !py-7" />
+              </div>
+
+              <button onClick={verifyOtp} disabled={loading || otp.length < 6} className="u-btn-primary w-full !py-5 text-lg">
+                {loading ? <Loader2 className="animate-spin" size={20} /> : <span>Verify OTP</span>}
+              </button>
+              
+              <button onClick={() => setStep('LOGIN')} className="w-full text-slate-300 text-[10px] font-black uppercase tracking-widest hover:text-black transition-colors">Change Number</button>
+            </div>
+          )}
+        </motion.div>
+
         <motion.div 
           initial={{ opacity: 0 }} 
           animate={{ opacity: 1 }} 
           transition={{ delay: 0.6 }}
-          className="space-y-3 mt-6"
+          className="mt-12 flex flex-col items-center space-y-10"
         >
-          {features.map((f, i) => (
-            <motion.div 
-              key={i}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.8 + i * 0.15 }}
-              className="flex items-center space-x-3"
-            >
-              <div className="w-6 h-6 bg-white/10 rounded-full flex items-center justify-center shrink-0 backdrop-blur-sm">
-                <Sparkles size={12} className="text-white/80" />
+          <div className="flex items-center space-x-12 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+            {[
+              { icon: Shield, label: 'Secure' },
+              { icon: Sparkles, label: 'Premium' },
+              { icon: CheckCircle, label: 'Pro' }
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col items-center space-y-2">
+                <item.icon size={18} className="text-black" />
+                <span className="text-[9px] font-black text-black uppercase tracking-widest">{item.label}</span>
               </div>
-              <span className="text-white/70 font-bold text-[14px]">{f}</span>
-            </motion.div>
-          ))}
+            ))}
+          </div>
+          
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center"
+          >
+            <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.1em] leading-relaxed max-w-[280px] mx-auto">
+              By continuing, you agree to our <br/>
+              <Link href="/terms" className="text-slate-400 hover:text-black transition-colors underline decoration-slate-200 underline-offset-4">Terms of service</Link>
+              <span className="mx-2">&</span>
+              <Link href="/privacy" className="text-slate-400 hover:text-black transition-colors underline decoration-slate-200 underline-offset-4">Privacy Policy</Link>
+            </p>
+          </motion.div>
         </motion.div>
       </div>
-
-      {/* Login Bottom Sheet */}
-      <motion.div 
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 120, delay: 0.3 }}
-        className="bg-white rounded-t-[44px] px-8 pt-6 pb-12 z-20 relative shadow-[0_-30px_80px_rgba(0,0,0,0.5)]"
-      >
-        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8" />
-
-        {/* Role Selector: Card Style */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          {roles.map(r => (
-            <motion.button 
-              key={r.key}
-              onClick={() => setRole(r.key)}
-              whileTap={{ scale: 0.95 }}
-              className={`relative flex flex-col items-center py-5 rounded-[24px] border-2 transition-all duration-300 ${
-                role === r.key 
-                  ? 'bg-black text-white border-black shadow-xl shadow-black/20' 
-                  : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'
-              }`}
-            >
-              <r.icon size={22} strokeWidth={2.5} className="mb-2" />
-              <span className="text-[12px] font-extrabold uppercase tracking-widest">{r.label}</span>
-            </motion.button>
-          ))}
-        </div>
-
-        <AnimatePresence mode="wait">
-          {step === 'LOGIN' ? (
-            <motion.div 
-              key="login"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-            >
-              <h2 className="text-[26px] font-extrabold text-black tracking-tight mb-1 leading-tight">Get Started</h2>
-              <p className="text-slate-400 font-bold mb-8 text-[14px]">Choose your role and sign in securely</p>
-              
-              {/* Google Login: Primary CTA */}
-              <button 
-                onClick={handleGoogleLogin}
-                disabled={loading}
-                className="w-full flex items-center justify-center space-x-3 bg-white py-5 rounded-[20px] border-2 border-slate-100 font-extrabold text-black text-[16px] mb-4 active:scale-[0.98] transition-all hover:border-black hover:shadow-lg group"
-              >
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6" alt="Google" />
-                <span>{loading ? 'Connecting...' : 'Continue with Google'}</span>
-                <ArrowRight size={18} className="text-slate-300 group-hover:text-black group-hover:translate-x-1 transition-all" />
-              </button>
-
-              <div className="relative my-6 text-center">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
-                <span className="relative px-4 bg-white text-slate-300 text-[10px] font-extrabold uppercase tracking-[0.3em]">or use phone</span>
-              </div>
-
-              <form onSubmit={handlePhoneSubmit} className="space-y-4">
-                <div className="relative group">
-                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-black transition-colors">
-                    <Smartphone size={20} />
-                  </div>
-                  <input 
-                    type="tel" 
-                    placeholder="+91 98765 43210" 
-                    className="u-input !pl-14 !py-5 !text-[16px] !border-slate-100 focus:!border-black"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
-                </div>
-                
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="u-btn-primary w-full !py-5 group"
-                >
-                  <span className="text-[15px]">{loading ? 'Sending OTP...' : 'Send Verification Code'}</span>
-                  {!loading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
-                </button>
-              </form>
-
-              <p className="mt-8 text-center text-slate-300 text-[11px] font-bold leading-relaxed px-4">
-                By continuing, you agree to our <span className="text-black underline underline-offset-2">Terms</span> and <span className="text-black underline underline-offset-2">Privacy Policy</span>.
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="otp"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <button 
-                onClick={() => setStep('LOGIN')}
-                className="text-black font-extrabold text-[13px] mb-6 flex items-center space-x-2 active:opacity-60 transition-opacity"
-              >
-                <ArrowRight size={16} className="rotate-180" />
-                <span>Change number</span>
-              </button>
-
-              <h2 className="text-[26px] font-extrabold text-black tracking-tight mb-1 leading-tight">Verify Phone</h2>
-              <p className="text-slate-400 font-bold mb-8 text-[14px]">Enter the 6-digit code sent to <span className="text-black">{phone}</span></p>
-              
-              <form onSubmit={handleOtpSubmit} className="space-y-6">
-                <input 
-                  type="text" 
-                  placeholder="• • • • • •" 
-                  maxLength={6}
-                  className="u-input text-center text-3xl tracking-[16px] font-extrabold !py-6 !border-slate-100 focus:!border-black"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                />
-                
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="u-btn-primary w-full !py-5"
-                >
-                  <span className="text-[15px]">{loading ? 'Verifying...' : 'Verify & Login'}</span>
-                  {!loading && <CheckCircle size={20} />}
-                </button>
-
-                <p className="text-center text-slate-400 text-[13px] font-bold">
-                  Didn't get it? <button type="button" onClick={() => setStep('LOGIN')} className="text-black font-extrabold underline underline-offset-2">Resend</button>
-                </p>
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      <div id="recaptcha-container"></div>
     </div>
   );
 }

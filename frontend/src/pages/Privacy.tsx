@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
 import { ChevronLeft, Shield, Lock, Eye, Mail } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export function Privacy() {
   const [, setLocation] = useLocation();
+  const { user } = useAuthStore();
 
   const sections = [
     {
@@ -32,7 +34,7 @@ export function Privacy() {
     <div className="bg-white min-h-screen pb-12">
       <div className="px-6 pt-12 pb-8 flex items-center space-x-4 sticky top-0 bg-white/90 backdrop-blur-md z-30 border-b border-slate-50">
         <button 
-          onClick={() => setLocation('/settings')}
+          onClick={() => setLocation(user ? '/settings' : '/login')}
           className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-black active:scale-90 transition-transform"
         >
           <ChevronLeft size={20} />

@@ -66,8 +66,15 @@ export function Properties() {
       const url = await getDownloadURL(snapshot.ref);
       setForm(f => ({ ...f, imageUrl: url }));
     } catch (error: any) {
-      console.error("Storage Error:", error);
-      alert(`Upload failed: ${error.message}`);
+      console.error("FULL Storage Error:", error);
+      console.error("Payload:", error.serverResponse || "No payload from server");
+      
+      const errorMessage = error.serverResponse || error.message || "Unknown server response";
+      alert(`Upload failed: ${errorMessage}. 
+      
+      Common fixes:
+      1. Go to Firebase Console > Storage > Rules and set 'allow read, write: if true;' for testing.
+      2. Ensure you have clicked 'Get Started' in the Storage tab of Firebase Console.`);
     } finally {
       setUploading(false);
     }

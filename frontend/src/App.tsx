@@ -1,4 +1,4 @@
-import { Route, Switch } from 'wouter';
+import { Route, Switch, useLocation } from 'wouter';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AppLayout } from './layouts/AppLayout';
 import { Login } from './pages/Login';
@@ -17,15 +17,24 @@ import { Help } from './pages/Help';
 
 function App() {
   const { user } = useAuthStore();
+  const [location] = useLocation();
 
+  // Handle common public routes regardless of login state
+  if (location === '/terms') return <Terms />;
+  if (location === '/privacy') return <Privacy />;
+
+  // Force login if no user is found
   if (!user) {
     return <Login />;
   }
 
+  // Dashboard landing logic (Redirects to correct view inside AppLayout)
+  const DashboardComponent = user.role === 'TENANT' ? TenantDashboard : Dashboard;
+
   return (
     <AppLayout>
       <Switch>
-        <Route path="/" component={user.role === 'TENANT' ? TenantDashboard : Dashboard} />
+        <Route path="/" component={DashboardComponent} />
         <Route path="/properties" component={Properties} />
         <Route path="/tenants" component={Tenants} />
         <Route path="/complaints" component={Complaints} />
@@ -33,12 +42,9 @@ function App() {
         <Route path="/caretakers" component={Caretakers} />
         <Route path="/settings" component={Settings} />
         <Route path="/pricing" component={Pricing} />
-        <Route path="/terms" component={Terms} />
-        <Route path="/privacy" component={Privacy} />
         <Route path="/help" component={Help} />
-        <Route path="/">
-          {user.role === 'TENANT' ? <TenantDashboard /> : <Dashboard />}
-        </Route>
+        {/* Default fallback to dashboard */}
+        <Route path="/:rest*" component={DashboardComponent} />
       </Switch>
     </AppLayout>
   );

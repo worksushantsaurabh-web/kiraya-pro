@@ -38,7 +38,7 @@ app.use((req, res, next) => {
 
 // User routes
 app.post('/api/users', async (req, res) => {
-  const { firebaseUid, email, name, role, phone } = req.body;
+  const { firebaseUid, email, name, role, phone, imageUrl } = req.body;
   
   // Standardize phone for comparison (remove spaces, dashes, etc.)
   const cleanPhone = phone ? phone.replace(/[^0-9+]/g, '') : null;
@@ -94,7 +94,8 @@ app.post('/api/users', async (req, res) => {
           email: uniqueEmail, 
           name: name || 'User', 
           role: (role as any) || 'TENANT', 
-          phone: cleanPhone 
+          phone: cleanPhone,
+          imageUrl: imageUrl || null
         }
       });
     }
@@ -118,12 +119,15 @@ app.post('/api/users', async (req, res) => {
       }
     }
 
-    // Standard updates
     // Standard updates for existing accounts
-    if ((!user.name || user.name === 'User') && name && name !== 'User') {
-      user = await prisma.user.update({ where: { id: user.id }, data: { name } });
+    const updates: any = {};
+    if ((!user.name || user.name === 'User') && name && name !== 'User') updates.name = name;
+    if (!user.phone && cleanPhone) updates.phone = cleanPhone;
+    if (!user.imageUrl && imageUrl) updates.imageUrl = imageUrl;
+
+    if (Object.keys(updates).length > 0) {
+      user = await prisma.user.update({ where: { id: user.id }, data: updates });
     }
-    if (!user.phone && cleanPhone) user = await prisma.user.update({ where: { id: user.id }, data: { phone: cleanPhone } });
 
     res.json(user);
     console.log('--- LOGIN SUCCESS ---', { id: user.id, role: user.role, name: user.name });

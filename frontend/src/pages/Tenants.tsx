@@ -101,9 +101,14 @@ export function Tenants() {
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       setForm(f => ({ ...f, idProofUrl: url }));
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : 'Unknown error';
-      alert(`Upload failed: ${msg}`);
+    } catch (error: any) {
+      console.error("FULL Storage Error:", error);
+      const serverResponse = error.serverResponse || error.message || "Unknown server response";
+      alert(`Upload failed: ${serverResponse}. 
+      
+      Common fixes:
+      1. Enable the 'Storage' tab in the Google Cloud console for this project.
+      2. Set Firebase Rules: 'allow read, write: if true;' for temporary testing.`);
     } finally {
       setUploading(false);
     }

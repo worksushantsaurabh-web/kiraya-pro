@@ -127,9 +127,12 @@ app.post('/api/users', async (req, res) => {
 
     res.json(user);
     console.log('--- LOGIN SUCCESS ---', { id: user.id, role: user.role, name: user.name });
-  } catch (error) {
-    console.error('Smart Linking Error:', error);
-    res.status(400).json({ error: 'Failed to process login and identify account' });
+  } catch (error: any) {
+    console.error('--- SMART LINKING ERROR ---', error.message || error);
+    if (error.code === 'P2002') {
+      return res.status(409).json({ error: 'This account is already linked to another user.' });
+    }
+    res.status(400).json({ error: error.message || 'Failed to process login and identify account' });
   }
 });
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { AlertCircle, CheckCircle, Plus, ChevronRight, MessageSquare, History, X, Loader2, Camera, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,11 +22,7 @@ export function Complaints() {
     imageUrl: ''
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     try {
       const [compRes, tenantsRes] = await Promise.all([
         api.get('/complaints'),
@@ -42,7 +38,11 @@ export function Complaints() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

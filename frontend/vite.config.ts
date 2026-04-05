@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/kiraya-pro/',
-  
+
   plugins: [
     react(),
     VitePWA({
@@ -35,7 +35,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': '/src',
+      '@': './src',
     },
   },
 })

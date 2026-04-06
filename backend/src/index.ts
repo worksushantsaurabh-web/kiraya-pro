@@ -8,8 +8,22 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Enhanced CORS for production reliability
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-firebase-uid'],
+  credentials: true
+}));
+
 app.use(express.json());
+
+// Global Request Logger
+app.use((req, res, next) => {
+  console.log(`[API LOG] ${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
 
 const prisma = new PrismaClient();
 

@@ -694,6 +694,16 @@ app.post('/api/payments/verify', async (req, res) => {
   }
 });
 
+// Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(`[FATAL ERROR] ${new Date().toISOString()}`, err);
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: err.message,
+    code: err.code 
+  });
+});
+
 // Start server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

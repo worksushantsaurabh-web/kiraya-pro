@@ -27,6 +27,17 @@ app.use((req, res, next) => {
 
 const prisma = new PrismaClient();
 
+// Global Health Check
+app.get('/api/health', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: 'ok', database: 'connected', version: '1.0.2' });
+  } catch (err: any) {
+    console.error("Health check database error:", err);
+    res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || '',
   key_secret: process.env.RAZORPAY_KEY_SECRET || '',

@@ -41,7 +41,7 @@ services:
         fromService:
           type: web
           name: kiraya-pro-backend
-          property: url
+          property: host
       - key: VITE_FIREBASE_API_KEY
         sync: false
       - key: VITE_FIREBASE_AUTH_DOMAIN

@@ -38,10 +38,15 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+let razorpay: any;
+if (process.env.RAZORPAY_KEY_ID) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET || '',
+  });
+} else {
+  console.warn('[WARNING] RAZORPAY_KEY_ID is missing. Payments module disabled.');
+}
 
 const PLAN_LIMITS: Record<string, { properties: number; tenants: number }> = {
   FREE: { properties: 1, tenants: 5 },

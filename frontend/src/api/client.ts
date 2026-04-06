@@ -7,14 +7,23 @@ const getBaseURL = () => {
   if (!envUrl) return 'http://localhost:3000/api';
   
   // If it's a domain name (from Render linking), ensure we add protocol and /api
-  let finalUrl = !envUrl.startsWith('http') ? `https://${envUrl}/api` : envUrl;
+  let finalUrl = envUrl;
   
-  // Ensure the /api suffix is present
+  // 1. If it's a raw service name from Render (no dots and no http), append domain
+  if (!finalUrl.includes('.') && !finalUrl.startsWith('http')) {
+    finalUrl = `https://${finalUrl}.onrender.com/api`;
+  } 
+  // 2. If it's a host but lacks protocol, add it
+  else if (!finalUrl.startsWith('http')) {
+    finalUrl = `https://${finalUrl}/api`;
+  }
+  
+  // 3. Final safety: ensure /api suffix is present
   if (!finalUrl.endsWith('/api')) {
     finalUrl = finalUrl.replace(/\/$/, '') + '/api';
   }
   
-  console.log(`[API DEBUG] Base URL: ${finalUrl}`);
+  console.log(`[API DEBUG] Final URL: ${finalUrl}`);
   return finalUrl;
 };
 

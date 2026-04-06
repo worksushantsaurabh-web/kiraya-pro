@@ -24,7 +24,9 @@ api.interceptors.response.use(
     if (error.code === 'ECONNABORTED') {
       console.error('[API ERROR] Request timed out. Backend might be sleeping.');
     } else if (error.message === 'Network Error') {
-      console.error('[API ERROR] Network Error. Likely CORS or Authorized Domains issue.');
+      const msg = `[DEPLOYMENT ERROR] Cannot reach backend at: ${error.config.baseURL}. Please verify Render Env Vars.`;
+      console.error(msg);
+      alert(msg);
     } else {
       console.error('[API ERROR]', error.response?.data || error.message);
     }

@@ -22,7 +22,7 @@ services:
       - key: RAZORPAY_KEY_SECRET
         sync: false
 
-  - type: static
+  - type: static_site
     name: kiraya-pro-frontend
     env: static
     plan: free

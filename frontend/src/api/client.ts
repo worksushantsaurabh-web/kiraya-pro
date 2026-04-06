@@ -7,7 +7,13 @@ const getBaseURL = () => {
   if (!envUrl) return 'http://localhost:3000/api';
   
   // If it's a domain name (from Render linking), ensure we add protocol and /api
-  const finalUrl = !envUrl.startsWith('http') ? `https://${envUrl}/api` : envUrl;
+  let finalUrl = !envUrl.startsWith('http') ? `https://${envUrl}/api` : envUrl;
+  
+  // Ensure the /api suffix is present
+  if (!finalUrl.endsWith('/api')) {
+    finalUrl = finalUrl.replace(/\/$/, '') + '/api';
+  }
+  
   console.log(`[API DEBUG] Base URL: ${finalUrl}`);
   return finalUrl;
 };

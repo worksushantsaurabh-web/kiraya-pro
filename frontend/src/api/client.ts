@@ -7,11 +7,9 @@ const getBaseURL = () => {
   if (!envUrl) return 'http://localhost:3000/api';
   
   // If it's a domain name (from Render linking), ensure we add protocol and /api
-  if (!envUrl.startsWith('http')) {
-    return `https://${envUrl}/api`;
-  }
-  
-  return envUrl;
+  const finalUrl = !envUrl.startsWith('http') ? `https://${envUrl}/api` : envUrl;
+  console.log(`[API DEBUG] Base URL: ${finalUrl}`);
+  return finalUrl;
 };
 
 export const api = axios.create({

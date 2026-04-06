@@ -14,7 +14,23 @@ const getBaseURL = () => {
 
 export const api = axios.create({
   baseURL: getBaseURL(),
+  timeout: 60000, // Handle Render free tier cold starts
 });
+
+// Robust Error Logging
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ECONNABORTED') {
+      console.error('[API ERROR] Request timed out. Backend might be sleeping.');
+    } else if (error.message === 'Network Error') {
+      console.error('[API ERROR] Network Error. Likely CORS or Authorized Domains issue.');
+    } else {
+      console.error('[API ERROR]', error.response?.data || error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
 api.interceptors.request.use((config) => {
   const user = useAuthStore.getState().user;

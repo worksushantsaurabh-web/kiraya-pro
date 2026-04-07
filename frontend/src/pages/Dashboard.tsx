@@ -98,7 +98,7 @@ export function Dashboard() {
                 className="flex items-center space-x-1 px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-tighter border border-amber-100 cursor-pointer hover:bg-amber-100 transition-colors"
               >
                 <Crown size={10} />
-                <span>{user?.subscriptionPlan || 'AARAMBH'}</span>
+                <span>{user?.subscriptionPlan || 'AARAMBH'} {user?.subscriptionDuration && `(${user.subscriptionDuration})`}</span>
               </span>
             )}
           </div>

@@ -33,7 +33,7 @@ export function Settings() {
       title: 'Profile & Identity',
       items: [
         { icon: User, label: 'Edit Profile', value: user?.name, action: () => setShowEdit(true) },
-        ...(user?.role !== 'TENANT' ? [{ icon: Zap, label: 'Subscription Plan', value: user?.subscriptionPlan || 'FREE', action: () => setLocation('/pricing') }] : []),
+        ...(user?.role !== 'TENANT' ? [{ icon: Zap, label: 'Subscription Plan', value: `${user?.subscriptionPlan || 'FREE'} ${user?.subscriptionDuration ? `(${user.subscriptionDuration})` : ''}`, action: () => setLocation('/pricing') }] : []),
         { icon: LogOut, label: 'Logout', value: 'Switch Account', action: handleLogout, danger: true }
       ]
     },

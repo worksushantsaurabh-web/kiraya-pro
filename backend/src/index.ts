@@ -672,6 +672,7 @@ app.post('/api/payments/verify', async (req, res) => {
         where: { id: userId },
         data: {
           subscriptionPlan: plan,
+          subscriptionDuration: duration || 'forever',
           subscriptionExpiry: null // Free plan doesn't expire usually
         }
       });
@@ -699,6 +700,7 @@ app.post('/api/payments/verify', async (req, res) => {
         where: { id: userId },
         data: {
           subscriptionPlan: plan,
+          subscriptionDuration: duration,
           subscriptionExpiry: expiryDate
         }
       });

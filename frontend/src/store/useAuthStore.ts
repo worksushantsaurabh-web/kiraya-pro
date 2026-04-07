@@ -11,6 +11,7 @@ export interface User {
   phone?: string;
   role: 'LANDLORD' | 'CARETAKER' | 'TENANT';
   subscriptionPlan: string;
+  subscriptionDuration?: string;
   subscriptionExpiry?: string;
   assignments?: any[];
   tenantProfile?: any;

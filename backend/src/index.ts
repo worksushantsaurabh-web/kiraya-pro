@@ -91,15 +91,18 @@ app.post('/api/users', async (req, res) => {
 
     // 3. Fallback: Check for pre-created profiles (caretakers/tenants) by phone or email
     if (!user && (cleanPhone || cleanEmail)) {
-      user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            cleanPhone ? { phone: { contains: cleanPhone.slice(-10) } } : { id: '___' },
-            cleanEmail ? { email: cleanEmail ?? '___' } : { id: '___' }
-          ],
-          firebaseUid: { startsWith: 'caretaker_' } // Logic for invited users
-        }
-      });
+      const orConditions: any[] = [];
+      if (cleanPhone) orConditions.push({ phone: { contains: cleanPhone.slice(-10) } });
+      if (cleanEmail) orConditions.push({ email: cleanEmail });
+
+      if (orConditions.length > 0) {
+        user = await prisma.user.findFirst({
+          where: {
+            OR: orConditions,
+            firebaseUid: { startsWith: 'caretaker_' } // Logic for invited users
+          }
+        });
+      }
 
       if (user) {
         // If the landlord gave a specific name, keep it unless we have a new valid one
@@ -134,17 +137,20 @@ app.post('/api/users', async (req, res) => {
     if (user.role === 'TENANT') {
       const existingProfile = await prisma.tenant.findUnique({ where: { userId: user.id } });
       if (!existingProfile) {
-        const profileToLink = await prisma.tenant.findFirst({
-          where: { 
-            OR: [
-              cleanPhone ? { phone: { contains: cleanPhone.slice(-10) } } : { id: '___' },
-              cleanEmail ? { email: cleanEmail ?? '___' } : { id: '___' }
-            ],
-            userId: null 
+        const tenantOrConditions: any[] = [];
+        if (cleanPhone) tenantOrConditions.push({ phone: { contains: cleanPhone.slice(-10) } });
+        if (cleanEmail) tenantOrConditions.push({ email: cleanEmail });
+
+        if (tenantOrConditions.length > 0) {
+          const profileToLink = await prisma.tenant.findFirst({
+            where: { 
+              OR: tenantOrConditions,
+              userId: null 
+            }
+          });
+          if (profileToLink) {
+            await prisma.tenant.update({ where: { id: profileToLink.id }, data: { userId: user.id } });
           }
-        });
-        if (profileToLink) {
-          await prisma.tenant.update({ where: { id: profileToLink.id }, data: { userId: user.id } });
         }
       }
     }
@@ -311,14 +317,16 @@ app.post('/api/caretakers', async (req, res) => {
 
   try {
     // 1. Check if user already exists
-    let caretaker = await prisma.user.findFirst({
-      where: {
-        OR: [
-          cleanPhone ? { phone: cleanPhone } : { id: '___' },
-          cleanEmail ? { email: cleanEmail } : { id: '___' }
-        ]
-      }
-    });
+    const caretakerOrConditions: any[] = [];
+    if (cleanPhone) caretakerOrConditions.push({ phone: cleanPhone });
+    if (cleanEmail) caretakerOrConditions.push({ email: cleanEmail });
+
+    let caretaker = null;
+    if (caretakerOrConditions.length > 0) {
+      caretaker = await prisma.user.findFirst({
+        where: { OR: caretakerOrConditions }
+      });
+    }
 
     if (caretaker) {
       // 2. Update existing user to Caretaker role + Link to landlord
@@ -655,7 +663,7 @@ app.post('/api/payments/create-order', async (req, res) => {
 });
 
 app.post('/api/payments/verify', async (req, res) => {
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan, status } = req.body;
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan, status, duration } = req.body;
   const userId = (req as any).userId;
 
   if (status === 'free') {
@@ -681,7 +689,11 @@ app.post('/api/payments/verify', async (req, res) => {
     // Payment verified
     try {
       const expiryDate = new Date();
-      expiryDate.setFullYear(expiryDate.getFullYear() + 1); // 1 year subscription
+      if (duration === 'yearly') {
+        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+      } else {
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+      }
 
       await prisma.user.update({
         where: { id: userId },

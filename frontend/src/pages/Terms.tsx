@@ -21,7 +21,7 @@ export function Terms() {
     {
       title: '3. Subscription & Payments',
       icon: <FileText size={20} className="text-amber-600" />,
-      content: 'Subscriptions are billed annually. Fees are non-refundable except as required by law. We use Razorpay for secure payment processing.'
+      content: 'Subscriptions are billed monthly or annually based on your choice. Fees are non-refundable except as required by law. We use Razorpay for secure payment processing.'
     },
     {
       title: '4. Data Accuracy',

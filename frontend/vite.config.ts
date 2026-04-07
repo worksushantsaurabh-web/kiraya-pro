@@ -11,22 +11,22 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['logo.png', 'favicon.svg'],
       manifest: {
-        name: 'Kiraya Pro',
+        name: 'Kiraya Pro | Property Management',
         short_name: 'Kiraya Pro',
-        description: 'Property Management Simplified',
-        theme_color: '#1d4ed8',
+        description: 'Professional Property Management System for Landlords, Caretakers, and Tenants.',
+        theme_color: '#ffffff',
         background_color: '#f8fafc',
         display: 'standalone',
         icons: [
           {
-            src: 'icon-192.png', // Removed leading slash for better PWA pathing
+            src: 'logo.png', // Removed leading slash for better PWA pathing
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'icon-512.png',
+            src: 'logo.png',
             sizes: '512x512',
             type: 'image/png'
           }

@@ -18,7 +18,12 @@ const getBaseURL = () => {
     finalUrl = `https://${finalUrl}/api`;
   }
   
-  // 3. Final safety: ensure /api suffix is present
+  // 3. Force replace http:// with https:// for non-localhost/production domains
+  if (!finalUrl.includes('localhost') && finalUrl.startsWith('http://')) {
+    finalUrl = finalUrl.replace('http://', 'https://');
+  }
+  
+  // 4. Final safety: ensure /api suffix is present
   if (!finalUrl.endsWith('/api')) {
     finalUrl = finalUrl.replace(/\/$/, '') + '/api';
   }

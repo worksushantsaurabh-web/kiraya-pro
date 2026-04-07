@@ -11,7 +11,14 @@ const app = express();
 
 // Enhanced CORS for production reliability
 app.use(cors({
-  origin: '*',
+  origin: (origin, callback) => {
+    // Allow any origin during development or from known production frontend
+    if (!origin || origin.includes('onrender.com') || origin.includes('localhost')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all for now but echo back specified origin
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id', 'x-firebase-uid'],
   credentials: true
@@ -26,6 +33,11 @@ app.use((req, res, next) => {
 });
 
 const prisma = new PrismaClient();
+
+// Root health check
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'Kiraya Pro backend is running' });
+});
 
 // Global Health Check
 app.get('/api/health', async (req, res) => {

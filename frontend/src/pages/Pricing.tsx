@@ -186,32 +186,32 @@ export function Pricing() {
           </div>
         </div>
 
-        <div className="px-6 pb-24 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="px-6 pb-24 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
           {plans.map((plan, i) => (
             <motion.div 
               key={plan.id}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-              className={`rounded-[40px] p-8 border ${plan.color} relative overflow-hidden flex flex-col shadow-xl shadow-slate-200/50 bg-white group hover:shadow-2xl hover:shadow-slate-300/60 transition-all duration-500`}
+              className={`rounded-[40px] p-7 md:p-8 border ${plan.color} relative overflow-hidden flex flex-col shadow-xl shadow-slate-200/50 bg-white group hover:shadow-2xl hover:shadow-slate-300/60 transition-all duration-500`}
             >
                {plan.isPopular && (
-                 <div className="absolute top-6 right-[-38px] bg-black text-white px-12 py-2 rotate-45 text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-1.5">
+                 <div className="absolute top-6 right-[-35px] bg-black text-white px-10 py-1.5 rotate-45 text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-1.5 min-w-[140px]">
                    <Star size={10} fill="currentColor" /> Popular
                  </div>
                )}
                
                <div className="flex justify-between items-start mb-6">
-                  <div className={`w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-xl border border-slate-100 group-hover:scale-110 transition-transform duration-500`}>
+                  <div className={`w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-xl border border-slate-100 group-hover:scale-110 transition-transform duration-500 shrink-0`}>
                      {plan.icon}
                   </div>
-                  <div className="text-right">
-                     <p className={`text-[11px] font-black uppercase tracking-[0.2em] mb-1 opacity-50`}>{plan.tag}</p>
-                     <h3 className="text-2xl font-black tracking-tight text-slate-900">{plan.name}</h3>
+                  <div className="text-right ml-4">
+                     <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-50 whitespace-nowrap`}>{plan.tag}</p>
+                     <h3 className="text-2xl font-black tracking-tight text-slate-900 leading-none">{plan.name}</h3>
                   </div>
                </div>
 
-               <p className="text-slate-500 text-sm font-medium mb-6 leading-relaxed">
+               <p className="text-slate-500 text-[13px] font-medium mb-6 leading-relaxed">
                  {plan.description}
                </p>
 
@@ -226,23 +226,23 @@ export function Pricing() {
                          className="flex items-baseline"
                        >
                          {typeof plan.price === 'number' ? (
-                           <>
-                              <span className="text-4xl font-black tracking-tighter text-slate-900">
+                           <div className="flex items-baseline min-w-0">
+                              <span className="text-3xl sm:text-4xl font-black tracking-tighter text-slate-900 truncate">
                                 ₹{billingCycle === 'yearly' ? plan.yearlyPrice : plan.price}
                               </span>
-                              <span className="text-slate-400 font-bold text-sm ml-1">
+                              <span className="text-slate-400 font-bold text-sm ml-1 shrink-0">
                                 {billingCycle === 'yearly' ? '/year' : '/month'}
                               </span>
-                           </>
+                           </div>
                          ) : (
                            <span className="text-3xl font-black tracking-tighter text-slate-900">{plan.price}</span>
                          )}
                        </motion.div>
                      </AnimatePresence>
                   </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <div className="h-1 w-1 rounded-full bg-slate-300" />
-                    <p className="text-[12px] font-black text-slate-900 uppercase tracking-tight italic opacity-70">{plan.limits}</p>
+                  <div className="mt-3 flex items-center gap-2 overflow-hidden">
+                    <div className="h-1 w-1 rounded-full bg-slate-300 shrink-0" />
+                    <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight italic opacity-70 whitespace-nowrap truncate">{plan.limits}</p>
                   </div>
                </div>
 

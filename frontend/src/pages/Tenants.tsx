@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Plus, ChevronRight, X, Loader2, Calendar, MessageSquare, History, IndianRupee, Phone, MapPin, Building2, Trash2, Crown } from 'lucide-react';
+import { Plus, ChevronRight, X, Loader2, Calendar, MessageSquare, History, IndianRupee, Phone, MapPin, Building2, Trash2, Crown, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/api/client';
 import { storage } from '@/firebase';
@@ -49,6 +49,7 @@ export function Tenants() {
   const [limitError, setLimitError] = useState<string | null>(null);
   const [filterProperty, setFilterProperty] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [showFilterBar, setShowFilterBar] = useState(false);
   const [, setLocation] = useLocation();
 
   const [form, setForm] = useState({
@@ -221,60 +222,88 @@ export function Tenants() {
             </p>
           </div>
           {canManage && (
-            <motion.button onClick={() => setShowAdd(true)} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="bg-black text-white px-5 py-3 rounded-2xl font-bold flex items-center space-x-2 shadow-lg shadow-black/10 transition-shadow hover:shadow-xl active:bg-slate-900 leading-none h-12">
-              <Plus size={20} /><span className="text-sm">Invite</span>
-            </motion.button>
+            <div className="flex items-center space-x-2 pb-1">
+              <motion.button 
+                onClick={() => setShowFilterBar(!showFilterBar)} 
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} 
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all border relative ${showFilterBar ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-slate-50 text-black border-slate-100 hover:border-slate-200'}`}
+              >
+                <SlidersHorizontal size={20} />
+                {(filterProperty !== 'all' || filterStatus !== 'all') && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white ring-1 ring-indigo-500/20" />
+                )}
+              </motion.button>
+              <motion.button 
+                onClick={() => setShowAdd(true)} 
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} 
+                className="bg-black text-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-black/10 transition-all hover:bg-slate-900 active:rotate-12"
+              >
+                <Plus size={24} />
+              </motion.button>
+            </div>
           )}
         </div>
       </div>
       
-      {/* Modern Filter System */}
-      {canManage && (
-        <div className="bg-slate-50/50 border-b border-slate-100 sticky top-[105px] z-20 backdrop-blur-md">
-          <div className="py-4 space-y-4">
-            {/* Property Chips - Horizontal Scroll */}
-            <div className="flex overflow-x-auto no-scrollbar px-6 space-x-2">
-              <button 
-                onClick={() => setFilterProperty('all')}
-                className={`shrink-0 px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${filterProperty === 'all' ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
-              >
-                All Buildings
-              </button>
-              {properties.map(p => (
+      {/* Modern Filter System - Now Collapsable */}
+      <AnimatePresence>
+        {showFilterBar && canManage && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="bg-slate-50/50 border-b border-slate-100 sticky top-[105px] z-20 backdrop-blur-md overflow-hidden"
+          >
+            <div className="py-4 space-y-4">
+              {/* Property Chips - Horizontal Scroll */}
+              <div className="flex overflow-x-auto no-scrollbar px-6 space-x-2">
                 <button 
-                  key={p.id}
-                  onClick={() => setFilterProperty(p.id)}
-                  className={`shrink-0 px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${filterProperty === p.id ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
+                  onClick={() => setFilterProperty('all')}
+                  className={`shrink-0 px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${filterProperty === 'all' ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
                 >
-                  {p.name}
+                  All Buildings
                 </button>
-              ))}
-            </div>
-
-            {/* Status Tabs */}
-            <div className="px-6 flex items-center justify-between">
-              <div className="flex bg-slate-200/50 p-1 rounded-2xl border border-slate-200/50">
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'PAID', label: 'Paid' },
-                  { id: 'OVERDUE', label: 'Dues' }
-                ].map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => setFilterStatus(s.id)}
-                    className={`px-6 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterStatus === s.id ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                {properties.map(p => (
+                  <button 
+                    key={p.id}
+                    onClick={() => setFilterProperty(p.id)}
+                    className={`shrink-0 px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${filterProperty === p.id ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
                   >
-                    {s.label}
+                    {p.name}
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                Showing {tenants.filter(t => (filterProperty === 'all' || (t.property as any)?.id === filterProperty) && (filterStatus === 'all' || t.rentStatus === filterStatus)).length} Tenants
-              </p>
+
+              {/* Status Tabs */}
+              <div className="px-6 flex items-center justify-between">
+                <div className="flex bg-slate-200/50 p-1 rounded-2xl border border-slate-200/50">
+                  {[
+                    { id: 'all', label: 'All' },
+                    { id: 'PAID', label: 'Paid' },
+                    { id: 'OVERDUE', label: 'Dues' }
+                  ].map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => setFilterStatus(s.id)}
+                      className={`px-6 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterStatus === s.id ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">
+                    Showing {tenants.filter(t => (filterProperty === 'all' || (t.property as any)?.id === filterProperty) && (filterStatus === 'all' || t.rentStatus === filterStatus)).length} Tenants
+                  </p>
+                  {(filterProperty !== 'all' || filterStatus !== 'all') && (
+                    <button onClick={() => { setFilterProperty('all'); setFilterStatus('all'); }} className="text-[9px] font-black text-indigo-600 uppercase tracking-tighter hover:underline mt-1">Reset</button>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="p-6 space-y-5">
         {(() => {

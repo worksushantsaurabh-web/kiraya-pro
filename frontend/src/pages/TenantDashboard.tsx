@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Home, AlertCircle, MessageSquare, ChevronRight, Bell, ShieldCheck, Loader2, Phone, User as UserIcon } from 'lucide-react';
+import { Home, AlertCircle, MessageSquare, ChevronRight, Bell, ShieldCheck, Loader2, Phone, User as UserIcon, Copy, Check } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/api/client';
 import { useLocation } from 'wouter';
 
@@ -11,6 +11,7 @@ export function TenantDashboard() {
   const [tenantInfo, setTenantInfo] = useState<any>(null);
   const [complaints, setComplaints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,11 +67,26 @@ export function TenantDashboard() {
               <h3 className="text-[32px] font-black tracking-tighter leading-none mb-3 underline decoration-white/20 underline-offset-8">
                 {tenantInfo?.property?.name || 'Your Property'}
               </h3>
-              <p className="text-white/50 text-[13px] font-bold mb-8 flex items-center space-x-2">
+              <p className="text-white/50 text-[13px] font-bold mb-4 flex items-center space-x-2">
                  <span className="text-white/80">Room {tenantInfo?.roomNumber || 'N/A'}</span>
                  <span className="opacity-30">•</span>
-                 <span className="line-clamp-1 truncate italic opacity-60">{tenantInfo?.property?.address}</span>
+                 <span className="line-clamp-1 truncate italic opacity-60 max-w-[180px]">{tenantInfo?.property?.address}</span>
               </p>
+              
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={async () => {
+                  const text = `${tenantInfo?.property?.name || ''}, Room ${tenantInfo?.roomNumber || ''}, ${tenantInfo?.property?.address || ''}`;
+                  await navigator.clipboard.writeText(text);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className={`mb-6 flex items-center space-x-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${copied ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50' : 'bg-white/5 text-white/40 border-white/5'}`}
+              >
+                {copied ? <Check size={10} /> : <Copy size={10} />}
+                <span>{copied ? 'Address Copied!' : 'Copy Full Address'}</span>
+              </motion.button>
+
               <div className="flex space-x-4">
                  <div className="bg-white/10 px-5 py-3 rounded-2xl border border-white/5 backdrop-blur-md">
                     <p className="text-[10px] font-extrabold opacity-40 uppercase tracking-widest mb-1">Monthly Rent</p>
@@ -103,7 +119,7 @@ export function TenantDashboard() {
                 <p className="text-emerald-800/60 font-bold text-sm mt-1">Your home is in perfect condition.</p>
              </div>
            ) : (
-             complaints.slice(0, 3).map(comp => (
+             complaints.slice(0, 3).map((comp: any) => (
                <div key={comp.id} onClick={() => setLocation('/complaints')} className="u-card flex items-center !p-5 cursor-pointer active:scale-[0.98] transition-all">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border border-slate-100 ${comp.status === 'OPEN' ? 'bg-rose-50 text-rose-500' : 'bg-slate-50 text-slate-400'}`}>
                     <AlertCircle size={24} />

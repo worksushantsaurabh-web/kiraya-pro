@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Home, AlertCircle, MessageSquare, ChevronRight, Bell, ShieldCheck, Loader2, Phone, User as UserIcon, Copy, Check } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { api } from '@/api/client';
 import { useLocation } from 'wouter';
 

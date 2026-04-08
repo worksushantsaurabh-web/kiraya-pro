@@ -231,6 +231,50 @@ export function Properties() {
                 <p className="text-[15px] font-black text-black">{prop.units || 1} Total</p>
               </div>
             </div>
+
+            <AnimatePresence>
+              {selectedId === prop.id && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="px-5 pb-5 border-t border-slate-50 bg-white"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="pt-4 space-y-3">
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Registered Tenants</h4>
+                    {prop.tenants?.length > 0 ? (
+                      <div className="space-y-2">
+                        {prop.tenants.map((t: any) => (
+                          <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:border-black/10 transition-colors">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white text-[10px] font-black">
+                                {t.roomNumber || '??'}
+                              </div>
+                              <span className="text-sm font-bold text-black">{t.name}</span>
+                            </div>
+                            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${t.rentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                              {t.rentStatus}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[12px] font-medium text-slate-400 italic py-2">No tenants registered in this building yet.</p>
+                    )}
+                    
+                    <button 
+                      onClick={() => setLocation('/tenants')}
+                      className="w-full mt-4 py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center space-x-2 hover:bg-black active:scale-95 transition-all"
+                    >
+                      <Plus size={14} />
+                      <span>Add Tenant to Building</span>
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         ))}
       </div>

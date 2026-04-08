@@ -47,6 +47,8 @@ export function Tenants() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [limitError, setLimitError] = useState<string | null>(null);
+  const [filterProperty, setFilterProperty] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [, setLocation] = useLocation();
 
   const [form, setForm] = useState({
@@ -225,9 +227,39 @@ export function Tenants() {
           )}
         </div>
       </div>
+      
+      {/* Filters Bar */}
+      {canManage && (
+        <div className="px-6 py-4 bg-slate-50 flex items-center space-x-3 sticky top-[105px] z-20 border-b border-slate-100/50">
+          <div className="flex-1">
+            <select 
+              value={filterProperty} 
+              onChange={e => setFilterProperty(e.target.value)}
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[12px] font-black uppercase tracking-tight outline-none focus:border-black transition-colors"
+            >
+              <option value="all">All Properties</option>
+              {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+          <div className="flex-1">
+            <select 
+              value={filterStatus} 
+              onChange={e => setFilterStatus(e.target.value)}
+              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[12px] font-black uppercase tracking-tight outline-none focus:border-black transition-colors"
+            >
+              <option value="all">Any Status</option>
+              <option value="PAID">Paid Only</option>
+              <option value="OVERDUE">With Dues</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       <div className="p-6 space-y-5">
-        {tenants.map((tenant, index) => (
+        {tenants
+          .filter(t => filterProperty === 'all' || (t.property as any)?.id === filterProperty)
+          .filter(t => filterStatus === 'all' || t.rentStatus === filterStatus)
+          .map((tenant, index) => (
           <motion.div 
             key={tenant.id} 
             initial={{ opacity: 0, y: 15 }} 

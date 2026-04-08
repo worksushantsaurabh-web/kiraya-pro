@@ -82,3 +82,11 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #D1D5DB;
 }
+/* Utility Classes */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

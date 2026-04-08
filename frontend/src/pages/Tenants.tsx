@@ -228,38 +228,71 @@ export function Tenants() {
         </div>
       </div>
       
-      {/* Filters Bar */}
+      {/* Modern Filter System */}
       {canManage && (
-        <div className="px-6 py-4 bg-slate-50 flex items-center space-x-3 sticky top-[105px] z-20 border-b border-slate-100/50">
-          <div className="flex-1">
-            <select 
-              value={filterProperty} 
-              onChange={e => setFilterProperty(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[12px] font-black uppercase tracking-tight outline-none focus:border-black transition-colors"
-            >
-              <option value="all">All Properties</option>
-              {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
-          <div className="flex-1">
-            <select 
-              value={filterStatus} 
-              onChange={e => setFilterStatus(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-[12px] font-black uppercase tracking-tight outline-none focus:border-black transition-colors"
-            >
-              <option value="all">Any Status</option>
-              <option value="PAID">Paid Only</option>
-              <option value="OVERDUE">With Dues</option>
-            </select>
+        <div className="bg-slate-50/50 border-b border-slate-100 sticky top-[105px] z-20 backdrop-blur-md">
+          <div className="py-4 space-y-4">
+            {/* Property Chips - Horizontal Scroll */}
+            <div className="flex overflow-x-auto no-scrollbar px-6 space-x-2">
+              <button 
+                onClick={() => setFilterProperty('all')}
+                className={`shrink-0 px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${filterProperty === 'all' ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
+              >
+                All Buildings
+              </button>
+              {properties.map(p => (
+                <button 
+                  key={p.id}
+                  onClick={() => setFilterProperty(p.id)}
+                  className={`shrink-0 px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${filterProperty === p.id ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Status Tabs */}
+            <div className="px-6 flex items-center justify-between">
+              <div className="flex bg-slate-200/50 p-1 rounded-2xl border border-slate-200/50">
+                {[
+                  { id: 'all', label: 'All' },
+                  { id: 'PAID', label: 'Paid' },
+                  { id: 'OVERDUE', label: 'Dues' }
+                ].map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => setFilterStatus(s.id)}
+                    className={`px-6 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterStatus === s.id ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                Showing {tenants.filter(t => (filterProperty === 'all' || (t.property as any)?.id === filterProperty) && (filterStatus === 'all' || t.rentStatus === filterStatus)).length} Tenants
+              </p>
+            </div>
           </div>
         </div>
       )}
 
       <div className="p-6 space-y-5">
-        {tenants
-          .filter(t => filterProperty === 'all' || (t.property as any)?.id === filterProperty)
-          .filter(t => filterStatus === 'all' || t.rentStatus === filterStatus)
-          .map((tenant, index) => (
+        {(() => {
+          const filtered = tenants
+            .filter(t => filterProperty === 'all' || (t.property as any)?.id === filterProperty)
+            .filter(t => filterStatus === 'all' || t.rentStatus === filterStatus);
+
+          if (filtered.length === 0 && tenants.length > 0) {
+             return (
+               <div className="py-20 text-center opacity-60">
+                 <X size={40} className="mx-auto mb-4 text-slate-200" />
+                 <p className="text-sm font-black uppercase tracking-widest text-slate-400">No matching tenants</p>
+                 <button onClick={() => { setFilterProperty('all'); setFilterStatus('all'); }} className="mt-4 text-black font-black text-[10px] uppercase underline tracking-widest">Clear All Filters</button>
+               </div>
+             );
+          }
+
+          return filtered.map((tenant, index) => (
           <motion.div 
             key={tenant.id} 
             initial={{ opacity: 0, y: 15 }} 
@@ -438,7 +471,7 @@ Please pay at the earliest.
               )}
             </AnimatePresence>
           </motion.div>
-        ))}
+        ))})()}
       </div>
 
       <AnimatePresence>

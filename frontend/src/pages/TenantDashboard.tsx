@@ -48,7 +48,7 @@ export function TenantDashboard() {
         </motion.div>
         <div className="flex space-x-3">
           <button className="w-11 h-11 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-black active:scale-90 transition-transform"><Bell size={20} /></button>
-          <div onClick={() => setLocation('/settings')} className="w-11 h-11 bg-black rounded-full flex items-center justify-center text-white font-extrabold text-sm border-2 border-slate-50 cursor-pointer overflow-hidden border-2 border-slate-50">
+          <div onClick={() => setLocation('/settings')} className="w-11 h-11 bg-black rounded-full flex items-center justify-center text-white font-extrabold text-sm border-2 border-slate-50 cursor-pointer overflow-hidden">
              {user?.imageUrl ? (
                <img src={user.imageUrl} className="w-full h-full object-cover" />
              ) : (
@@ -125,7 +125,7 @@ export function TenantDashboard() {
           <div className="bg-slate-50 rounded-[36px] p-8 border border-slate-100 relative overflow-hidden">
              <div className="relative z-10">
                 <div className="flex items-center space-x-4 mb-6">
-                   <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-indigo-500 shadow-sm overflow-hidden text-sm uppercase font-black text-slate-300">
+                   <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-indigo-500 shadow-sm overflow-hidden text-sm uppercase font-black">
                       {tenantInfo.property.assignments[0].caretaker?.imageUrl ? (
                         <img src={tenantInfo.property.assignments[0].caretaker.imageUrl} className="w-full h-full object-cover" />
                       ) : (

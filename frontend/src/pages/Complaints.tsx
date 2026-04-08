@@ -28,7 +28,13 @@ export function Complaints() {
         api.get('/complaints'),
         user?.role !== 'TENANT' ? api.get('/tenants') : Promise.resolve({ data: [] })
       ]);
-      setComplaints(compRes.data);
+      if (user?.role === 'TENANT') {
+        const myProfile = (await api.get('/tenants')).data[0];
+        setComplaints(compRes.data.filter((c: any) => c.tenantId === myProfile?.id));
+      } else {
+        setComplaints(compRes.data);
+      }
+
       setTenants(tenantsRes.data);
       if (tenantsRes.data.length > 0) {
         setForm(f => ({ ...f, tenantId: tenantsRes.data[0].id }));

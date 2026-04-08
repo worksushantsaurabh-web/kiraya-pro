@@ -22,10 +22,16 @@ export function TenantDashboard() {
           api.get('/complaints'),
         ]);
         
+        let profileId = '';
         if (tenantsRes.data.length > 0) {
-          setTenantInfo(tenantsRes.data[0]);
+          const profile = tenantsRes.data[0];
+          setTenantInfo(profile);
+          profileId = profile.id;
         }
-        setComplaints(compRes.data);
+
+        // Defensive frontend filter: only show complaints belonging to this tenant profile
+        const myComplaints = compRes.data.filter((c: any) => c.tenantId === profileId);
+        setComplaints(myComplaints);
       } catch (_err) {
         console.error("Dashboard fetch error", _err);
       } finally {

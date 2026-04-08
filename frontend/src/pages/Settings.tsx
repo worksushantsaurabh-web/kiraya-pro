@@ -89,9 +89,12 @@ export function Settings() {
 
       <div className="p-6">
         <div className="u-card !p-8 flex flex-col items-center bg-black/5 border-none shadow-none mb-10 overflow-hidden relative">
-           <div className="w-28 h-28 bg-black rounded-[40px] flex items-center justify-center text-white text-4xl font-extrabold mb-6 shadow-2xl shadow-black/20 ring-4 ring-white relative z-10 transition-transform hover:rotate-6 active:scale-90 overflow-hidden bg-cover bg-center" 
-                style={user?.imageUrl ? { backgroundImage: `url(${user.imageUrl})` } : {}}>
-             {!user?.imageUrl && user?.name?.charAt(0)}
+           <div className="w-28 h-28 bg-black rounded-[40px] flex items-center justify-center text-white text-4xl font-extrabold mb-6 shadow-2xl shadow-black/20 ring-4 ring-white relative z-10 transition-transform hover:rotate-6 active:scale-90 overflow-hidden">
+             {user?.imageUrl ? (
+               <img src={user.imageUrl} className="w-full h-full object-cover" alt="Profile" />
+             ) : (
+               user?.name?.charAt(0)
+             )}
            </div>
            <div className="text-center relative z-10">
               <h3 className="font-extrabold text-[24px] text-black tracking-tight leading-tight mb-2 uppercase">{user?.role}</h3>
@@ -149,9 +152,14 @@ export function Settings() {
                 <div className="flex justify-center mb-10">
                   <div className="relative group">
                     <input type="file" id="profile-pic" className="hidden" accept="image/*" onChange={handleFileUpload} />
-                    <label htmlFor="profile-pic" className={`w-32 h-32 rounded-[40px] flex items-center justify-center cursor-pointer transition-all border-4 border-slate-100 overflow-hidden bg-cover bg-center ${uploading ? 'opacity-50' : ''}`}
-                           style={editForm.imageUrl ? { backgroundImage: `url(${editForm.imageUrl})` } : { backgroundColor: '#f1f5f9' }}>
-                       {uploading ? <Loader2 size={32} className="animate-spin text-black" /> : !editForm.imageUrl && <User size={48} className="text-slate-300" />}
+                    <label htmlFor="profile-pic" className={`w-32 h-32 rounded-[40px] flex items-center justify-center cursor-pointer transition-all border-4 border-slate-100 overflow-hidden relative ${uploading ? 'opacity-50' : 'bg-slate-100'}`}>
+                       {uploading ? (
+                         <Loader2 size={32} className="animate-spin text-black" />
+                       ) : editForm.imageUrl ? (
+                         <img src={editForm.imageUrl} className="w-full h-full object-cover" />
+                       ) : (
+                         <User size={48} className="text-slate-300" />
+                       )}
                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-black text-[10px] uppercase tracking-widest">Change Photo</div>
                     </label>
                   </div>

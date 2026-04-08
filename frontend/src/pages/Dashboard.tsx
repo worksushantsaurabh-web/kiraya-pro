@@ -115,10 +115,13 @@ export function Dashboard() {
           </button>
           <div 
             onClick={() => setLocation('/settings')} 
-            className="w-11 h-11 bg-black rounded-full flex items-center justify-center text-white font-extrabold text-sm border-2 border-slate-50 cursor-pointer active:scale-90 transition-transform bg-cover bg-center overflow-hidden"
-            style={user?.imageUrl ? { backgroundImage: `url(${user.imageUrl})` } : {}}
+            className="w-11 h-11 bg-black rounded-full flex items-center justify-center border-2 border-slate-50 cursor-pointer active:scale-90 transition-all overflow-hidden relative"
           >
-            {!user?.imageUrl && user?.name?.charAt(0)}
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} className="w-full h-full object-cover absolute inset-0" alt="Profile" />
+            ) : (
+              <span className="font-extrabold text-sm text-white">{user?.name?.charAt(0)}</span>
+            )}
           </div>
         </div>
       </div>

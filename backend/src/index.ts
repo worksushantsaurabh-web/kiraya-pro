@@ -442,7 +442,20 @@ app.get('/api/tenants', async (req, res) => {
     if (!user.tenantProfile) return res.json([]);
     query.id = user.tenantProfile.id;
   }
-  const tenants = await prisma.tenant.findMany({ where: query, include: { property: true } });
+  const tenants = await prisma.tenant.findMany({ 
+    where: query, 
+    include: { 
+      property: {
+        include: {
+          assignments: {
+            include: {
+              caretaker: true
+            }
+          }
+        }
+      } 
+    } 
+  });
   res.json(tenants);
 });
 

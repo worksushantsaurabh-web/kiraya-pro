@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Home, AlertCircle, MessageSquare, ChevronRight, Bell, ShieldCheck, Loader2 } from 'lucide-react';
+import { Home, AlertCircle, MessageSquare, ChevronRight, Bell, ShieldCheck, Loader2, Phone, User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
 import { api } from '@/api/client';
@@ -48,16 +48,27 @@ export function TenantDashboard() {
         </motion.div>
         <div className="flex space-x-3">
           <button className="w-11 h-11 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center text-black active:scale-90 transition-transform"><Bell size={20} /></button>
-          <div onClick={() => setLocation('/settings')} className="w-11 h-11 bg-black rounded-full flex items-center justify-center text-white font-extrabold text-sm border-2 border-slate-50 cursor-pointer">{(tenantInfo?.name || user?.name || '?').charAt(0)}</div>
+          <div onClick={() => setLocation('/settings')} className="w-11 h-11 bg-black rounded-full flex items-center justify-center text-white font-extrabold text-sm border-2 border-slate-50 cursor-pointer overflow-hidden border-2 border-slate-50">
+             {user?.imageUrl ? (
+               <img src={user.imageUrl} className="w-full h-full object-cover" />
+             ) : (
+               (tenantInfo?.name || user?.name || '?').charAt(0)
+             )}
+          </div>
         </div>
       </div>
 
       {/* Main Info Card */}
       <div className="px-6 py-4">
-        <div className="u-card bg-black p-8 text-white relative overflow-hidden h-48 flex flex-col justify-center shadow-2xl shadow-black/20">
+        <div className="u-card bg-black p-8 text-white relative overflow-hidden h-52 flex flex-col justify-center shadow-2xl shadow-black/20">
            <div className="relative z-10">
               <p className="text-white/60 font-extrabold text-[11px] uppercase tracking-widest mb-1">Current Residence</p>
-              <h3 className="text-2xl font-extrabold tracking-tight mb-4 line-clamp-1">{tenantInfo?.property?.name || 'Assigned Home'}</h3>
+              <h3 className="text-2xl font-extrabold tracking-tight line-clamp-1">{tenantInfo?.property?.name || 'Assigned Home'}</h3>
+              <p className="text-white/40 text-[12px] font-bold mb-5 flex items-center space-x-1.5 mt-1">
+                 <span>Room {tenantInfo?.roomNumber || 'N/A'}</span>
+                 <span className="opacity-30">•</span>
+                 <span className="line-clamp-1 truncate">{tenantInfo?.property?.address}</span>
+              </p>
               <div className="flex space-x-4">
                  <div className="bg-white/10 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-md">
                     <p className="text-[10px] font-extrabold opacity-60 uppercase tracking-tighter">Rent Due</p>
@@ -65,7 +76,7 @@ export function TenantDashboard() {
                  </div>
                  <div className="bg-white/10 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-md">
                     <p className="text-[10px] font-extrabold opacity-60 uppercase tracking-tighter">Status</p>
-                    <p className="text-lg font-extrabold">{tenantInfo?.rentStatus || 'PAID'}</p>
+                    <p className="text-lg font-extrabold uppercase">{tenantInfo?.rentStatus || 'PAID'}</p>
                  </div>
               </div>
            </div>
@@ -106,11 +117,52 @@ export function TenantDashboard() {
         </div>
       </div>
 
-      {/* Log Issue Floating Trigger (Simulated for Demo) */}
-      <div className="px-6 py-2">
-         <button onClick={() => setLocation('/complaints')} className="w-full bg-slate-50 border border-slate-100 p-6 rounded-[32px] flex items-center justify-between group active:bg-black active:text-white transition-all">
+      {/* Caretaker Support Section */}
+      {tenantInfo?.property?.assignments?.length > 0 && (
+        <div className="px-6 py-4">
+          <div className="bg-slate-50 rounded-[36px] p-8 border border-slate-100 relative overflow-hidden">
+             <div className="relative z-10">
+                <div className="flex items-center space-x-4 mb-6">
+                   <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-indigo-500 shadow-sm overflow-hidden">
+                      {tenantInfo.property.assignments[0].caretaker?.imageUrl ? (
+                        <img src={tenantInfo.property.assignments[0].caretaker.imageUrl} className="w-full h-full object-cover" />
+                      ) : (
+                        <UserIcon size={32} />
+                      )}
+                   </div>
+                   <div>
+                      <p className="text-[11px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1.5">Property Caretaker</p>
+                      <p className="text-xl font-extrabold text-black">{tenantInfo.property.assignments[0].caretaker?.name}</p>
+                   </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                   <a 
+                     href={`tel:${tenantInfo.property.assignments[0].caretaker?.phone}`}
+                     className="flex items-center justify-center space-x-3 py-4 bg-black text-white rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all active:scale-95 shadow-lg shadow-black/10"
+                   >
+                     <Phone size={16} />
+                     <span>Call</span>
+                   </a>
+                   <a 
+                     href={`https://wa.me/${tenantInfo.property.assignments[0].caretaker?.phone?.replace(/\+/g, '')}`}
+                     target="_blank"
+                     className="flex items-center justify-center space-x-3 py-4 bg-emerald-100 text-emerald-700 rounded-2xl text-[12px] font-black uppercase tracking-widest hover:bg-emerald-200 transition-all active:scale-95 border border-emerald-200"
+                   >
+                     <MessageSquare size={16} />
+                     <span>WhatsApp</span>
+                   </a>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Need Assistance Section */}
+      <div className="px-6 py-6">
+         <button onClick={() => setLocation('/complaints')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[32px] flex items-center justify-between group active:bg-slate-50 transition-all">
             <div className="flex items-center space-x-4">
-               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-rose-500 group-active:bg-rose-500 group-active:text-white transition-colors">
+               <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-rose-500 transition-colors">
                   <MessageSquare size={24} />
                </div>
                <div className="text-left">
@@ -118,7 +170,7 @@ export function TenantDashboard() {
                   <p className="text-[13px] font-bold opacity-60">Raise a maintenance request</p>
                </div>
             </div>
-            <ChevronRight size={20} className="text-slate-300 group-active:text-white" />
+            <ChevronRight size={20} className="text-slate-300 group-hover:text-black transition-colors" />
          </button>
       </div>
     </div>

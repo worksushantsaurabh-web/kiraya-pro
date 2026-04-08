@@ -1,17 +1,22 @@
 import { useAuthStore } from '@/store/useAuthStore';
-import { User, Shield, CreditCard, ChevronRight, LogOut, Building2, HelpCircle, Zap, FileText } from 'lucide-react';
+import { User, Shield, CreditCard, ChevronRight, LogOut, Building2, HelpCircle, Zap, FileText, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { storage } from '@/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { api } from '@/api/client';
 
 export function Settings() {
   const { user, setUser } = useAuthStore();
   const [, setLocation] = useLocation();
   const [showEdit, setShowEdit] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [editForm, setEditForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
-    email: user?.email || ''
+    email: user?.email || '',
+    imageUrl: user?.imageUrl || ''
   });
 
   const handleLogout = () => {
@@ -20,12 +25,32 @@ export function Settings() {
     setLocation('/login');
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `profiles/${user?.id || Date.now()}`);
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      setEditForm(f => ({ ...f, imageUrl: url }));
+    } catch (err: any) {
+      alert("Upload failed: " + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    setUser({ ...user, ...editForm });
-    setShowEdit(false);
-    alert("Profile updated locally. Ensure backend sync if needed.");
+    try {
+      const res = await api.put('/users/me', editForm);
+      setUser(res.data);
+      setShowEdit(false);
+    } catch (err: any) {
+      alert("Failed to update: " + err.message);
+    }
   };
 
   const sections = [
@@ -64,8 +89,9 @@ export function Settings() {
 
       <div className="p-6">
         <div className="u-card !p-8 flex flex-col items-center bg-black/5 border-none shadow-none mb-10 overflow-hidden relative">
-           <div className="w-28 h-28 bg-black rounded-[40px] flex items-center justify-center text-white text-4xl font-extrabold mb-6 shadow-2xl shadow-black/20 ring-4 ring-white relative z-10 transition-transform hover:rotate-6 active:scale-90">
-             {user?.name?.charAt(0)}
+           <div className="w-28 h-28 bg-black rounded-[40px] flex items-center justify-center text-white text-4xl font-extrabold mb-6 shadow-2xl shadow-black/20 ring-4 ring-white relative z-10 transition-transform hover:rotate-6 active:scale-90 overflow-hidden bg-cover bg-center" 
+                style={user?.imageUrl ? { backgroundImage: `url(${user.imageUrl})` } : {}}>
+             {!user?.imageUrl && user?.name?.charAt(0)}
            </div>
            <div className="text-center relative z-10">
               <h3 className="font-extrabold text-[24px] text-black tracking-tight leading-tight mb-2 uppercase">{user?.role}</h3>
@@ -120,6 +146,16 @@ export function Settings() {
                 <button onClick={() => setShowEdit(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center"><CloseIcon size={24} /></button>
               </div>
               <form onSubmit={handleUpdate} className="space-y-6">
+                <div className="flex justify-center mb-10">
+                  <div className="relative group">
+                    <input type="file" id="profile-pic" className="hidden" accept="image/*" onChange={handleFileUpload} />
+                    <label htmlFor="profile-pic" className={`w-32 h-32 rounded-[40px] flex items-center justify-center cursor-pointer transition-all border-4 border-slate-100 overflow-hidden bg-cover bg-center ${uploading ? 'opacity-50' : ''}`}
+                           style={editForm.imageUrl ? { backgroundImage: `url(${editForm.imageUrl})` } : { backgroundColor: '#f1f5f9' }}>
+                       {uploading ? <Loader2 size={32} className="animate-spin text-black" /> : !editForm.imageUrl && <User size={48} className="text-slate-300" />}
+                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-black text-[10px] uppercase tracking-widest">Change Photo</div>
+                    </label>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
                   <input type="text" className="u-input" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} placeholder="Rahul Singh..." />

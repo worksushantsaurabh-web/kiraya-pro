@@ -13,6 +13,7 @@ export interface User {
   subscriptionPlan: string;
   subscriptionDuration?: string;
   subscriptionExpiry?: string;
+  imageUrl?: string;
   assignments?: any[];
   tenantProfile?: any;
 }

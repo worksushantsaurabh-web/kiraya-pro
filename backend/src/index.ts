@@ -201,6 +201,21 @@ app.get('/api/users/me', async (req, res) => {
   res.json(user);
 });
 
+app.put('/api/users/me', async (req, res) => {
+  const userId = (req as any).userId;
+  const { name, phone, email, imageUrl } = req.body;
+  
+  try {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { name, phone, email, imageUrl }
+    });
+    res.json(user);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Properties
 app.get('/api/properties', async (req, res) => {
   const userId = (req as any).userId;

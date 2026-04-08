@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Home, AlertCircle, MessageSquare, ChevronRight, Bell, ShieldCheck, Loader2, Phone, User as UserIcon, Copy, Check, MapPin, Zap } from 'lucide-react';
+import { AlertCircle, MessageSquare, ChevronRight, Bell, ShieldCheck, Loader2, Phone, User as UserIcon, Copy, Check, MapPin, Zap } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { api } from '@/api/client';
 import { useLocation } from 'wouter';
 
@@ -205,7 +205,7 @@ export function TenantDashboard() {
                 <p className="text-emerald-800/60 font-bold text-[13px] mt-2 leading-relaxed">No pending maintenance issues. Enjoy your stay!</p>
              </div>
            ) : (
-             complaints.slice(0, 2).map((comp: any, idx) => (
+             complaints.slice(0, 2).map((comp: any, idx: number) => (
                <motion.div 
                  key={comp.id} 
                  initial={{ opacity: 0, x: -10 }}

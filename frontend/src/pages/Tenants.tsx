@@ -49,7 +49,8 @@ export function Tenants() {
   const [limitError, setLimitError] = useState<string | null>(null);
   const [filterProperty, setFilterProperty] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [showFilterBar, setShowFilterBar] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [showFilters, setShowFilters] = useState(false);
   const [, setLocation] = useLocation();
 
   const [form, setForm] = useState({
@@ -224,9 +225,9 @@ export function Tenants() {
           {canManage && (
             <div className="flex items-center space-x-2 pb-1">
               <motion.button 
-                onClick={() => setShowFilterBar(!showFilterBar)} 
+                onClick={() => setShowFilters(true)} 
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} 
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all border relative ${showFilterBar ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-slate-50 text-black border-slate-100 hover:border-slate-200'}`}
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all border relative ${filterProperty !== 'all' || filterStatus !== 'all' ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-slate-50 text-black border-slate-100 hover:border-slate-200'}`}
               >
                 <SlidersHorizontal size={20} />
                 {(filterProperty !== 'all' || filterStatus !== 'all') && (
@@ -245,63 +246,89 @@ export function Tenants() {
         </div>
       </div>
       
-      {/* Modern Filter System - Now Collapsable */}
+      {/* Modern Filter Sheet */}
       <AnimatePresence>
-        {showFilterBar && canManage && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="bg-slate-50/50 border-b border-slate-100 sticky top-[105px] z-20 backdrop-blur-md overflow-hidden"
-          >
-            <div className="py-4 space-y-4">
-              {/* Property Chips - Horizontal Scroll */}
-              <div className="flex overflow-x-auto no-scrollbar px-6 space-x-2">
-                <button 
-                  onClick={() => setFilterProperty('all')}
-                  className={`shrink-0 px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${filterProperty === 'all' ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
-                >
-                  All Buildings
-                </button>
-                {properties.map(p => (
-                  <button 
-                    key={p.id}
-                    onClick={() => setFilterProperty(p.id)}
-                    className={`shrink-0 px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${filterProperty === p.id ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300'}`}
-                  >
-                    {p.name}
-                  </button>
-                ))}
+        {showFilters && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowFilters(false)} className="fixed inset-0 bg-black/40 backdrop-blur-md z-[60]" />
+            <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[40px] p-8 z-[70] max-w-[480px] mx-auto overflow-y-auto max-h-[85vh] shadow-2xl">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-2xl font-extrabold tracking-tight">Display Options</h3>
+                <button onClick={() => setShowFilters(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center"><X size={24} /></button>
               </div>
 
-              {/* Status Tabs */}
-              <div className="px-6 flex items-center justify-between">
-                <div className="flex bg-slate-200/50 p-1 rounded-2xl border border-slate-200/50">
-                  {[
-                    { id: 'all', label: 'All' },
-                    { id: 'PAID', label: 'Paid' },
-                    { id: 'OVERDUE', label: 'Dues' }
-                  ].map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => setFilterStatus(s.id)}
-                      className={`px-6 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filterStatus === s.id ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      {s.label}
-                    </button>
-                  ))}
+              <div className="space-y-8">
+                {/* Status Selection */}
+                <div>
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 ml-1">Payment Status</h4>
+                  <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-[20px]">
+                    {[
+                      { id: 'all', label: 'All' },
+                      { id: 'PAID', label: 'Paid' },
+                      { id: 'OVERDUE', label: 'Dues' }
+                    ].map(s => (
+                      <button
+                        key={s.id}
+                        onClick={() => setFilterStatus(s.id)}
+                        className={`py-3 rounded-[16px] text-[11px] font-black uppercase tracking-wider transition-all ${filterStatus === s.id ? 'bg-white text-black shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-none">
-                    Showing {tenants.filter(t => (filterProperty === 'all' || (t.property as any)?.id === filterProperty) && (filterStatus === 'all' || t.rentStatus === filterStatus)).length} Tenants
-                  </p>
-                  {(filterProperty !== 'all' || filterStatus !== 'all') && (
-                    <button onClick={() => { setFilterProperty('all'); setFilterStatus('all'); }} className="text-[9px] font-black text-indigo-600 uppercase tracking-tighter hover:underline mt-1">Reset</button>
-                  )}
+
+                {/* Building Selection */}
+                <div>
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 ml-1">Properties</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => setFilterProperty('all')}
+                      className={`px-4 py-4 rounded-[24px] text-[12px] font-bold text-left transition-all border ${filterProperty === 'all' ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-slate-50 text-slate-400 border-slate-50'}`}
+                    >
+                      All Buildings
+                    </button>
+                    {properties.map(p => (
+                      <button 
+                        key={p.id}
+                        onClick={() => setFilterProperty(p.id)}
+                        className={`px-4 py-4 rounded-[24px] text-[12px] font-bold text-left transition-all border ${filterProperty === p.id ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-slate-50 text-slate-400 border-slate-50'}`}
+                      >
+                        {p.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sort Logic */}
+                <div>
+                   <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 ml-1">Sort By</h4>
+                   <div className="space-y-2">
+                     {[
+                       { id: 'name', label: 'Name (A-Z)' },
+                       { id: 'rent-high', label: 'Highest Rent' },
+                       { id: 'rent-low', label: 'Lowest Rent' },
+                       { id: 'due', label: 'Due Date' }
+                     ].map(s => (
+                       <button
+                         key={s.id}
+                         onClick={() => setSortBy(s.id)}
+                         className={`w-full flex items-center justify-between px-5 py-4 rounded-[24px] text-[13px] font-extrabold transition-all border ${sortBy === s.id ? 'bg-black text-white border-black shadow-lg shadow-black/10' : 'bg-white border-slate-100 text-slate-500'}`}
+                       >
+                         <span>{s.label}</span>
+                         {sortBy === s.id && <div className="w-2 h-2 bg-indigo-400 rounded-full" />}
+                       </button>
+                     ))}
+                   </div>
+                </div>
+
+                <div className="pt-4">
+                  <button onClick={() => setShowFilters(false)} className="u-btn-primary w-full !py-5 text-lg">Apply Filters</button>
+                  <button onClick={() => { setFilterProperty('all'); setFilterStatus('all'); setSortBy('name'); }} className="w-full mt-4 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-black">Reset View</button>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -311,7 +338,15 @@ export function Tenants() {
             .filter(t => filterProperty === 'all' || (t.property as any)?.id === filterProperty)
             .filter(t => filterStatus === 'all' || t.rentStatus === filterStatus);
 
-          if (filtered.length === 0 && tenants.length > 0) {
+          const sorted = [...filtered].sort((a: any, b: any) => {
+            if (sortBy === 'name') return a.name.localeCompare(b.name);
+            if (sortBy === 'rent-high') return b.rentAmount - a.rentAmount;
+            if (sortBy === 'rent-low') return a.rentAmount - b.rentAmount;
+            if (sortBy === 'due') return a.rentDay - b.rentDay;
+            return 0;
+          });
+
+          if (sorted.length === 0 && tenants.length > 0) {
              return (
                <div className="py-20 text-center opacity-60">
                  <X size={40} className="mx-auto mb-4 text-slate-200" />
@@ -321,7 +356,7 @@ export function Tenants() {
              );
           }
 
-          return filtered.map((tenant, index) => (
+          return sorted.map((tenant, index) => (
           <motion.div 
             key={tenant.id} 
             initial={{ opacity: 0, y: 15 }} 

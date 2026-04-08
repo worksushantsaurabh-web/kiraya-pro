@@ -264,13 +264,15 @@ export function Properties() {
                       <p className="text-[12px] font-medium text-slate-400 italic py-2">No tenants registered in this building yet.</p>
                     )}
                     
-                    <button 
-                      onClick={() => setLocation('/tenants')}
-                      className="w-full mt-4 py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center space-x-2 hover:bg-black active:scale-95 transition-all"
-                    >
-                      <Plus size={14} />
-                      <span>Add Tenant to Building</span>
-                    </button>
+                    {(isLandlord || isCaretaker) && (
+                      <button 
+                        onClick={() => setLocation('/tenants')}
+                        className="w-full mt-4 py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center space-x-2 hover:bg-black active:scale-95 transition-all"
+                      >
+                        <Plus size={14} />
+                        <span>Add Tenant to Building</span>
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               )}

@@ -60,28 +60,30 @@ export function TenantDashboard() {
 
       {/* Main Info Card */}
       <div className="px-6 py-4">
-        <div className="u-card bg-black p-8 text-white relative overflow-hidden h-52 flex flex-col justify-center shadow-2xl shadow-black/20">
-           <div className="relative z-10">
-              <p className="text-white/60 font-extrabold text-[11px] uppercase tracking-widest mb-1">Current Residence</p>
-              <h3 className="text-2xl font-extrabold tracking-tight line-clamp-1">{tenantInfo?.property?.name || 'Assigned Home'}</h3>
-              <p className="text-white/40 text-[12px] font-bold mb-5 flex items-center space-x-1.5 mt-1">
-                 <span>Room {tenantInfo?.roomNumber || 'N/A'}</span>
+        <div className="u-card bg-black p-8 text-white relative overflow-hidden h-[240px] flex flex-col justify-center shadow-2xl shadow-black/20">
+           <div className="relative z-10 scale-105 transform origin-left">
+              <p className="text-indigo-400 font-black text-[10px] uppercase tracking-[0.3em] mb-2">Living at</p>
+              <h3 className="text-[32px] font-black tracking-tighter leading-none mb-3 underline decoration-white/20 underline-offset-8">
+                {tenantInfo?.property?.name || 'Your Property'}
+              </h3>
+              <p className="text-white/50 text-[13px] font-bold mb-8 flex items-center space-x-2">
+                 <span className="text-white/80">Room {tenantInfo?.roomNumber || 'N/A'}</span>
                  <span className="opacity-30">•</span>
-                 <span className="line-clamp-1 truncate">{tenantInfo?.property?.address}</span>
+                 <span className="line-clamp-1 truncate italic opacity-60">{tenantInfo?.property?.address}</span>
               </p>
               <div className="flex space-x-4">
-                 <div className="bg-white/10 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-md">
-                    <p className="text-[10px] font-extrabold opacity-60 uppercase tracking-tighter">Rent Due</p>
-                    <p className="text-lg font-extrabold">₹{tenantInfo?.rentAmount || 0}</p>
+                 <div className="bg-white/10 px-5 py-3 rounded-2xl border border-white/5 backdrop-blur-md">
+                    <p className="text-[10px] font-extrabold opacity-40 uppercase tracking-widest mb-1">Monthly Rent</p>
+                    <p className="text-xl font-extrabold">₹{tenantInfo?.rentAmount || 0}</p>
                  </div>
-                 <div className="bg-white/10 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-md">
-                    <p className="text-[10px] font-extrabold opacity-60 uppercase tracking-tighter">Status</p>
-                    <p className="text-lg font-extrabold uppercase">{tenantInfo?.rentStatus || 'PAID'}</p>
+                 <div className="bg-white/10 px-5 py-3 rounded-2xl border border-white/5 backdrop-blur-md">
+                    <p className="text-[10px] font-extrabold opacity-40 uppercase tracking-widest mb-1">Status</p>
+                    <p className="text-xl font-extrabold uppercase">{tenantInfo?.rentStatus || 'PAID'}</p>
                  </div>
               </div>
            </div>
-           <div className="absolute right-[-20px] bottom-[-40px] opacity-10 rotate-12">
-              <Home size={180} strokeWidth={1} />
+           <div className="absolute right-[-40px] bottom-[-40px] opacity-[0.08] rotate-12">
+              <Home size={220} strokeWidth={1} />
            </div>
         </div>
       </div>
@@ -123,7 +125,7 @@ export function TenantDashboard() {
           <div className="bg-slate-50 rounded-[36px] p-8 border border-slate-100 relative overflow-hidden">
              <div className="relative z-10">
                 <div className="flex items-center space-x-4 mb-6">
-                   <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-indigo-500 shadow-sm overflow-hidden">
+                   <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-indigo-500 shadow-sm overflow-hidden text-sm uppercase font-black text-slate-300">
                       {tenantInfo.property.assignments[0].caretaker?.imageUrl ? (
                         <img src={tenantInfo.property.assignments[0].caretaker.imageUrl} className="w-full h-full object-cover" />
                       ) : (
@@ -159,7 +161,7 @@ export function TenantDashboard() {
       )}
 
       {/* Need Assistance Section */}
-      <div className="px-6 py-6">
+      <div className="px-6 py-2">
          <button onClick={() => setLocation('/complaints')} className="w-full bg-white border-2 border-slate-100 p-6 rounded-[32px] flex items-center justify-between group active:bg-slate-50 transition-all">
             <div className="flex items-center space-x-4">
                <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-rose-500 transition-colors">

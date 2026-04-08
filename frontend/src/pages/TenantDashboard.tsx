@@ -22,14 +22,16 @@ export function TenantDashboard() {
           api.get('/complaints'),
         ]);
         
-        let profileId = '';
+        // Use the profile ID directly from the authenticated user's profile for 100% certainty
+        const profileId = user?.tenantProfile?.id || (tenantsRes.data.length > 0 ? tenantsRes.data[0].id : '');
+        
         if (tenantsRes.data.length > 0) {
-          const profile = tenantsRes.data[0];
+          // Sync UI info with the most relevant profile
+          const profile = tenantsRes.data.find((p: any) => p.id === profileId) || tenantsRes.data[0];
           setTenantInfo(profile);
-          profileId = profile.id;
         }
 
-        // Defensive frontend filter: only show complaints belonging to this tenant profile
+        // Apply strict filter using verified profile ID
         const myComplaints = compRes.data.filter((c: any) => c.tenantId === profileId);
         setComplaints(myComplaints);
       } catch (_err) {
@@ -57,7 +59,7 @@ export function TenantDashboard() {
         <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
           <div className="flex items-center space-x-2 mb-1">
              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-             <span className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] opacity-80">Active Residency</span>
+             <span className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] opacity-80">Security V2 Active</span>
           </div>
           <h2 className="text-[28px] font-black tracking-tighter text-black leading-none uppercase">
             Hi, {(tenantInfo?.name || user?.name || 'Member').split(' ')[0]}

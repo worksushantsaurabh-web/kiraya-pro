@@ -576,15 +576,20 @@ app.put('/api/tenants/:id', async (req, res) => {
 app.get('/api/complaints', async (req, res) => {
   const userId = (req as any).userId;
   const user = await prisma.user.findUnique({ where: { id: userId }, include: { tenantProfile: true } });
+  if (!user) return res.status(401).send();
+
   let query: any = {};
-  if (user?.role === 'LANDLORD') {
+  if (user.role === 'LANDLORD') {
     query.landlordId = userId;
-  } else if (user?.role === 'CARETAKER') {
+  } else if (user.role === 'CARETAKER') {
     const assignments = await prisma.caretakerAssignment.findMany({ where: { caretakerId: userId }});
     query.propertyId = { in: assignments.map(a => a.propertyId) };
-  } else if (user?.role === 'TENANT') {
+  } else if (user.role === 'TENANT') {
     if (!user.tenantProfile) return res.json([]);
     query.tenantId = user.tenantProfile.id;
+  } else {
+    // Unknown role: security fallback to NO data
+    return res.json([]);
   }
   const complaints = await prisma.complaint.findMany({ where: query, include: { property: true, tenant: true } });
   res.json(complaints);

@@ -231,6 +231,9 @@ app.get('/api/properties', async (req, res) => {
   } else if (user.role === 'TENANT') {
     if (!user.tenantProfile) return res.json([]);
     query.id = user.tenantProfile.propertyId;
+  } else {
+    // Unrecognized role: security fallback
+    return res.json([]);
   }
   const properties = await prisma.property.findMany({ where: query, include: { tenants: true } });
   res.json(properties);
@@ -441,6 +444,9 @@ app.get('/api/tenants', async (req, res) => {
   } else if (user.role === 'TENANT') {
     if (!user.tenantProfile) return res.json([]);
     query.id = user.tenantProfile.id;
+  } else {
+    // Unrecognized role or new user: security fallback to NO data
+    return res.json([]);
   }
   const tenants = await prisma.tenant.findMany({ 
     where: query, 
@@ -477,6 +483,9 @@ app.get('/api/rent-records', async (req, res) => {
   } else if (user.role === 'CARETAKER') {
     const assignments = await prisma.caretakerAssignment.findMany({ where: { caretakerId: userId }});
     query.propertyId = { in: assignments.map(a => a.propertyId) };
+  } else {
+    // Unknown role: security default to empty
+    return res.json([]);
   }
 
   const records = await prisma.rentRecord.findMany({ 
